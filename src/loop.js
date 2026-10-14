@@ -14,8 +14,9 @@
     var S0 = {
       mode: 'room', modeT: 0, az: reduce ? AZ0 : AZ0 - 0.9, azTarget: AZ0, interacted: false, dragging: false,
       lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(H.x, 0.1, H.z),
-      pov: 'drone', yaw: 0, pitch: 0, fov: 68
+      pov: 'drone', yaw: 0, pitch: 0, fov: 68, floor: 1, lvPrev: 0
     };
+    var HG = ctx.houseGeo;
     var keys = {};
     var zoom = 1, zoomT = 1, ZMIN = 0.5, ZMAX = 2;   // mouse-wheel zoom (multiplies the view height)
     var view = { w: 1440, h: 900 };
@@ -36,7 +37,7 @@
     };
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
-      var hRoom = Math.max(9.2, 10.0 / aspect), hRoam = Math.max(6.8, 7.5 / aspect);
+      var hRoom = Math.max(10.8, 11.8 / aspect), hRoam = Math.max(6.8, 7.5 / aspect);
       var halfH = lerp(hRoom, hRoam, e) * zoom, halfW = halfH * aspect;
       var off = 0;
       camera.left = -halfW - off; camera.right = halfW - off;
@@ -55,13 +56,16 @@
       return lx > -0.2 && lx < dock.len && Math.abs(lz) < 0.8;
     };
     var blocked = function (x, z) {
+      var lv = P && P.lv ? 1 : 0;
       var land = Math.hypot(x, z) <= islandR(Math.atan2(z, x)) - 1.4;
       if (!land && !onDock(x, z)) return true;
       for (var i = 0; i < rects.length; i++) {
         var r = rects[i];
+        if ((r[4] | 0) !== lv) continue;
         if (x > r[0] - R_P && x < r[2] + R_P && z > r[1] - R_P && z < r[3] + R_P) return true;
       }
       for (var j = 0; j < circles.length; j++) {
+        if ((circles[j][3] | 0) !== lv) continue;
         if (Math.hypot(circles[j][0] - x, circles[j][1] - z) < circles[j][2] + R_P) return true;
       }
       return false;
@@ -69,11 +73,16 @@
     var groundY = function (wx, wz) {
       if (onDock(wx, wz)) return -0.15;
       var x = (wx - H.x) / H.s, z = (wz - H.z) / H.s;   // house-local coordinates
-      if (x > 4.9 && x < 7.2 && Math.abs(z + 4.0) < 1.0) {
-        var u = clamp((x - 6.5) / 0.6, 0, 1);
+      var st = HG.st;
+      if (x > st.x0 - 0.3 && x < st.x1 + 0.3 && z > st.z0 - 0.2 && z < st.z1 + 0.4) {   // the stairs are a ramp
+        return H.s * HG.f2 * clamp((st.z1 - z) / (st.z1 - st.z0), 0, 1);
+      }
+      if (Math.abs(x) < HG.hx + 0.2 && Math.abs(z) < HG.hz + 0.2) return (P && P.lv ? HG.f2 + 0.05 : 0.05) * H.s;
+      if (x > HG.hx - 0.2 && x < HG.hx + 2.3 && Math.abs(z + 4.0) < 1.0) {   // front step
+        var u = clamp((x - (HG.hx + 1.3)) / 0.6, 0, 1);
         return (0.04 * (1 - u)) * H.s + GY * u;
       }
-      var d = Math.max(Math.abs(x), Math.abs(z)) - 5.45;
+      var d = Math.max(Math.abs(x) - HG.hx - 0.25, Math.abs(z) - HG.hz - 0.25);
       var t = clamp(d / 0.9, 0, 1);
       return 0.05 * H.s * (1 - t) + GY * t;
     };
@@ -85,7 +94,9 @@
 
     var stepPlayer = function (dt, t, a) {
       if (!P) return;
-      if (P.mode === 'sit') { P.pose(t, dt, false); return; }
+      if (P.mode === 'sit') { P.lv = 0; P.pose(t, dt, false); return; }
+      P.lv = P.y > 0.55 * HG.f2 * H.s ? 1 : 0;
+      if (P.lv !== S0.lvPrev) { S0.lvPrev = P.lv; setFloor(P.lv + 1); }
       var moving = false, mx = 0, mz = 0;
       if (P.path.length) {
         var w = P.path[0], dx = w[0] - P.x, dz = w[1] - P.z, d = Math.hypot(dx, dz);
@@ -132,6 +143,11 @@
       S0.interacted = true;
       S0.azTarget = S0.mode === 'room' ? clamp(S0.azTarget + d, AZ_MIN, AZ_MAX) : S0.azTarget + d;
     };
+    var setFloor = function (n) {
+      n = n === 2 ? 2 : 1;
+      S0.floor = n;
+      if (ctx.onFloor) ctx.onFloor(n);
+    };
     var fade = document.getElementById('cut');
     var setPov = function (pov, instant) {
       if (pov !== 'fps' && pov !== 'drone') return;
@@ -144,8 +160,8 @@
           P.path = []; P.dest = null; marker.visible = false;
           if (wasRoam) S0.yaw = P.heading + Math.PI;
           else {   // just left the desk: start inside the house, facing the door
-            P.x = H.x + 2 * H.s; P.z = H.z - 2.5 * H.s; P.y = 0.05 * H.s;
-            S0.yaw = Math.atan2(-3.2, 1.5); S0.pitch = -0.05;
+            P.x = H.x + 8 * H.s; P.z = H.z - 1.8 * H.s; P.y = 0.05 * H.s;
+            S0.yaw = Math.atan2(-3, 2.2); S0.pitch = -0.05;
           }
           S0.pov = 'fps';
           P.g.visible = false;
@@ -182,6 +198,7 @@
       marker.visible = false;
       if (S0.pov === 'fps') setPov('drone', true);
       P.sit();
+      S0.lvPrev = 0; setFloor(1);
       S0.az = AZ0 + wrapPi(S0.az - AZ0);
       S0.azTarget = AZ0 + clamp(wrapPi(S0.azTarget - AZ0), -Math.PI / 2, Math.PI / 2);
       rootEl.setAttribute('data-mode', 'room');
@@ -190,7 +207,7 @@
       if (S0.mode !== 'roam' || !P || P.mode !== 'walk' || P.path.length) return;
       if (!blocked(x, z)) P.dest = [x, z];
     };
-    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo, setPov: setPov };
+    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo, setPov: setPov, setFloor: setFloor };
     ctx.state = S0;
     rootEl.setAttribute('data-mode', 'room');
     rootEl.setAttribute('data-pov', 'drone');
@@ -268,20 +285,24 @@
     canvas.addEventListener('blur', function () { keys = {}; });
 
     // ---------- per-frame ----------
-    var updateWalls = function (a, dt, full) {
+    var updateWalls = function (a, dt, full, upK) {
       var cx = Math.sin(a), cz = Math.cos(a);
       walls.forEach(function (w) {
         var d = w.n[0] * cx + w.n[1] * cz;
-        w.f += (((d > 0.25 && !full) ? 0 : 1) - w.f) * Math.min(1, dt * 7);
+        var target = w.part ? (full ? 1 : 0.28) : ((d > 0.25 && !full) ? 0 : 1);
+        w.f += (target - w.f) * Math.min(1, dt * 7);
         w.mesh.scale.y = 0.1 + 0.9 * w.f;
         var s = smooth((w.f - 0.35) / 0.55);
-        w.anchor.visible = s > 0.02;
-        w.anchor.scale.setScalar(Math.max(s, 0.001));
-        w.lights.forEach(function (l) { l.light.intensity = l.base * s * (1 + 1.1 * (ctx.env ? ctx.env.night : 0)); });
-        w.low.forEach(function (m) { m.visible = w.f > 0.5; });
+        (w.anchors && w.anchors.length ? w.anchors : [w.anchor]).forEach(function (an) {
+          if (!an) return;
+          an.visible = s > 0.02;
+          an.scale.setScalar(Math.max(s, 0.001));
+        });
+        var ls = w.part ? 1 : s;
+        w.lights.forEach(function (l) { l.light.intensity = l.base * ls * (1 + 1.1 * (ctx.env ? ctx.env.night : 0)) * (l.upper ? upK : 1); });
       });
     };
-    updateWalls(S0.az, 100);
+    updateWalls(S0.az, 100, false, 0);
     var lastLabel = '';
     var updateLabel = function () {
       var name = '';
@@ -336,7 +357,9 @@
       }
       ctx.shadowPlane.position.x = f.x;
       ctx.shadowPlane.position.z = f.z;
-      updateWalls(S0.az, dt, S0.pov === 'fps');
+      var showUp = S0.pov === 'fps' || S0.floor === 2;
+      if (ctx.house && ctx.house.upper.visible !== showUp) ctx.house.upper.visible = showUp;
+      updateWalls(S0.az, dt, S0.pov === 'fps', showUp ? 1 : 0);
 
       // tall props between the camera and the focus shrink so they never hide the view
       var cx = Math.sin(a), cz = Math.cos(a);

@@ -93,12 +93,12 @@
       var H = ctx.home;
       var w = function (x, z) { return [H.x + x * H.s, H.z + z * H.s]; };
       g.scale.setScalar(H.s);
-      var st = w(-1.8, -2.6);
+      var st = w(4.2, -3.7);
       P.x = st[0]; P.z = st[1]; P.y = 0.05 * H.s; P.amp = 0; P.phase = 0;
-      P.heading = 0.9;
+      P.heading = 1.2;
       P.mode = 'walk';
       P.dest = null;
-      P.path = [w(-1.0, -1.0), w(2.0, -3.0), w(3.2, -4.0), w(5.3, -4.0), w(7.6, -4.0)];
+      P.path = [w(6.4, -3.9), w(9.4, -4.0), w(11.4, -4.0), w(13.8, -4.0)];
       g.position.set(P.x, P.y, P.z);
       g.rotation.set(0, P.heading, 0);
     };

@@ -149,12 +149,12 @@
     poi('Garden', 3.5, 12.8, 5.5, 5.5);
     poi('Picnic spot', -5.0, 12.8, 4.5, 4.0);
     poi('The dock', ctx.dock.ox + Math.cos(da) * 7, ctx.dock.oz + Math.sin(da) * 7, 5, 5);
-    poi('Home sweet home', H.x + 2.6, H.z - 1.0, 3.2, 3.0);
+    poi('Home sweet home', H.x + 1.0, H.z, 7.0, 6.5);
 
     // ---------- stepping-stone paths ----------
     var P = function (pts) { paths.push(pts); };
-    var Ds = [H.x + 3.9, H.z - 2.0], hub = [3.5, -7.5];
-    P([Ds, [H.x + 5.4, H.z + 3.0], hub]);
+    var Ds = [H.x + 7.4, H.z - 2.0], hub = [3.5, -7.5];
+    P([Ds, [H.x + 8.6, H.z + 2.2], hub]);
     P([hub, [7.5, -8.6], [10.4, -9.2]]);
     P([hub, [-1.0, -8.8], [-6.0, -9.4], [-10.8, -9.7]]);
     P([[-1.0, -8.8], [-5.0, -6.5], [-8.2, -3.8], [-8.6, -2.0]]);

@@ -69,7 +69,7 @@
     };
     // The house is built at 1/2 scale next to the rest of the island (a person is 1.5 units tall)
     var HOME_S = 0.5, HOME_TH = -Math.PI / 2;
-    var home = { s: HOME_S, x: 0, z: Math.sin(HOME_TH) * (islandR(HOME_TH) - 5.4) };
+    var home = { s: HOME_S, x: 0, z: Math.sin(HOME_TH) * (islandR(HOME_TH) - 8.2) };
 
     var anim = [];
     var rings = [];
@@ -152,8 +152,8 @@
       clamp: clamp, smooth: smooth, lerp: lerp, wrapPi: wrapPi, rnd: rnd, reduce: reduce, safe: safe, C: C,
       mat: mat, matF: matF, glow: glow, mesh: mesh, box: box, cyl: cyl, sph: sph, flat: flat, tex: tex, inst: inst,
       anim: anim, tall: [], pois: [], paths: [], obstacleCircles: [], obstacleRects: [], walls: [], anchors: {},
-      circ: function (x, z, r) { ctx.obstacleCircles.push([x, z, r]); },
-      rect: function (x0, z0, x1, z1) { ctx.obstacleRects.push([x0, z0, x1, z1]); }
+      circ: function (x, z, r, lv) { ctx.obstacleCircles.push([x, z, r, lv || 0]); },
+      rect: function (x0, z0, x1, z1, lv) { ctx.obstacleRects.push([x0, z0, x1, z1, lv || 0]); }
     });
   };
 })();

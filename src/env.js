@@ -349,7 +349,7 @@
       scene.add(g);
       birds.push({ g: g, wings: wings, cx: cx, cz: cz, rad: rad, y: y, sp: sp, ph: ph });
     };
-    for (var bi = 0; bi < 3; bi++) addBird(H.x, H.z, 10 + bi * 3.2, 8.5 + bi * 0.8, (bi % 2 ? -1 : 1) * (0.2 + bi * 0.03), bi * 1.7);
+    for (var bi = 0; bi < 3; bi++) addBird(H.x, H.z, 14 + bi * 3.2, 9.5 + bi * 0.8, (bi % 2 ? -1 : 1) * (0.2 + bi * 0.03), bi * 1.7);
     for (var bj = 0; bj < 4; bj++) addBird(0, 0, 26 + bj * 7, 13 + bj, (bj % 2 ? 1 : -1) * (0.07 + bj * 0.01), bj * 2.3 + 1);
 
     // campfire glow

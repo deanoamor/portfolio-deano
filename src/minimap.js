@@ -71,7 +71,8 @@
       });
       // house
       sg.fillStyle = '#E8896B'; sg.strokeStyle = '#0E3B38'; sg.lineWidth = 1.5;
-      sg.beginPath(); sg.rect(mx(H.x) - 5, my(H.z) - 5, 10, 10); sg.fill(); sg.stroke();
+      var hw = ctx.houseGeo.hx * H.s * sc, hd = ctx.houseGeo.hz * H.s * sc;
+      sg.beginPath(); sg.rect(mx(H.x) - hw, my(H.z) - hd, hw * 2, hd * 2); sg.fill(); sg.stroke();
     };
 
     var draw = function () {

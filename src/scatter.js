@@ -11,7 +11,7 @@
       var lx = Math.max(0, Math.min(dock.len, dx * Math.cos(dock.a) + dz * Math.sin(dock.a)));
       return Math.hypot(dx - Math.cos(dock.a) * lx, dz - Math.sin(dock.a) * lx);
     };
-    var nearHome = function (x, z, m) { return Math.abs(x - H.x) < 5.6 * H.s + m && Math.abs(z - H.z) < 5.6 * H.s + m; };
+    var nearHome = function (x, z, m) { var g = ctx.houseGeo; return Math.abs(x - H.x) < (g.hx + 0.6) * H.s + m && Math.abs(z - H.z) < (g.hz + 0.6) * H.s + m; };
     var onLand = function (x, z, margin) { return Math.hypot(x, z) < islandR(Math.atan2(z, x)) - margin; };
     var free = function (x, z, pad) {
       for (var i = 0; i < circles.length; i++) if (Math.hypot(circles[i][0] - x, circles[i][1] - z) < circles[i][2] + pad) return false;
@@ -22,7 +22,7 @@
       return true;
     };
     // no tall trees on the camera side of the house, so a tree never hides it (trees no longer shrink)
-    var inHouseView = function (x, z) { return x - H.x + (z - H.z) > -2 && Math.hypot(x - H.x, z - H.z) < 12; };
+    var inHouseView = function (x, z) { return x - H.x + (z - H.z) > -2 && Math.hypot(x - H.x, z - H.z) < 16; };
     var okTree = function (x, z) {
       if (inHouseView(x, z)) return false;
       if (nearHome(x, z, 3.2) || !onLand(x, z, 1.8) || ctx.nearPath(x, z, 1.7) || distDock(x, z) < 3.5) return false;
@@ -82,35 +82,6 @@
       }
     });
 
-    // ---------- wildflower meadows ----------
-    safe('flowers', function () {
-      var pal = [C.mustard, C.coral, C.cream, C.pink, '#B79CF2', '#FF9EB5'];
-      var pickSlot = function () { return Math.floor(rnd() * pal.length); };
-      var clusters = [], tries = 0;
-      while (clusters.length < 56 && tries++ < 1600) {
-        var th = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * islandR(th);
-        var x = Math.cos(th) * r, z = Math.sin(th) * r;
-        if (okSmall(x, z, 1.2)) clusters.push({ x: x, z: z, s1: pickSlot(), s2: pickSlot() });
-      }
-      var heads = [], stems = [];
-      clusters.forEach(function (cl) {
-        for (var k = 0; k < 16; k++) {
-          var a = rnd() * 6.28, rr = rnd() * 2.6;
-          var x = cl.x + Math.cos(a) * rr, z = cl.z + Math.sin(a) * rr;
-          if (!okSmall(x, z, 0.3)) continue;
-          var h = 0.22 + rnd() * 0.18;
-          stems.push({ x: x, y: GY + h / 2, z: z, sy: h / 0.3 });
-          var sl = rnd() < 0.75 ? cl.s1 : cl.s2;
-          heads.push({ x: x, y: GY + h + 0.05, z: z, c: pal[sl], slot: sl });
-        }
-      });
-      var stemM = inst(new T.CylinderGeometry(0.02, 0.02, 0.3, 4), new T.MeshLambertMaterial({ color: '#4FA877' }), stems, false);
-      var headM = inst(new T.SphereGeometry(0.1, 8, 6), new T.MeshLambertMaterial({ color: 0xffffff }), heads, false);
-      stemM.userData.role = 'flowerStems';
-      headM.userData.role = 'flowerHeads';
-      headM.userData.slots = heads.map(function (o) { return o.slot; });
-    });
-
     // ---------- grass tufts + bushes ----------
     safe('tufts', function () {
       var tufts = [], tries = 0;
@@ -143,7 +114,7 @@
 
     // ---------- lantern posts along the main path ----------
     safe('lanterns', function () {
-      [[H.x + 4.6, H.z - 0.2], [H.x + 6.4, H.z + 3.6], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].forEach(function (p) {
+      [[H.x + 7.4, H.z - 0.6], [H.x + 8.6, H.z + 2.4], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].forEach(function (p) {
         ctx.lanterns.push([p[0], p[1]]);
         cyl(root, 0.05, 0.05, 1.7, C.ink, p[0], GY + 0.85, p[1], 0, 0, 0, 6);
         mesh(root, new T.BoxGeometry(0.28, 0.32, 0.28), glow('#FFE2A0'), p[0], GY + 1.85, p[1], 0, 0, 0, false);

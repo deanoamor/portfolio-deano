@@ -19,6 +19,11 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 - Person = 1.5 units tall. The house (room.js, built at full size in local coords) lives in a group scaled `ctx.home.s` (0.5) at `ctx.home.{x,z}`; collisions/person path are converted to world coords. Everything else is modelled at world scale.
 - Island is wide (R≈38) with a bay cut in the north (`islandR` in core.js); the house sits on the north shore so the sea shows behind it. Island centre is the origin.
 
+## House
+- Two storeys, built in `room.js` at full size and scaled by `ctx.home.s`: ground floor = living room + workstation (NE), kitchen (SE), bedroom (NW), bathroom (SW); upstairs = lounge. Footprint ±11 x ±7.5 local units (`ctx.houseGeo`). Walls are built from pieces with real door/window openings (`makeWall`); partitions are waist-high in the drone cutaway (`w.part`) and full height in first person.
+- Upstairs (`ctx.house.upper`) is shown by the Floor 1/2 buttons (`api.setFloor`), and always in first person. The stairs are a ramp (`groundY` in loop.js); obstacles carry a level (0 ground, 1 upstairs) and the player's level is `P.lv`.
+- Static furniture is merged per material with `bake()`; anything animated (cat, vinyl, steam, chair) is flagged `userData.noMerge`.
+
 ## Environment
 - `env.js`: `ctx.env.set({season, time})` (spring/summer/autumn/winter, morning/noon/evening/night). Foliage uses unshared materials in `ctx.fol` so seasons can recolour them; summer = original palette. Mountains (`mountains.js`) sit behind the house for every camera angle so they never hide it.
 - `minimap.js`: top-right canvas; click to walk in roam mode (`api.walkTo`).
