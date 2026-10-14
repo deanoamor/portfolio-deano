@@ -6,7 +6,8 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 - `index.html` — overlay UI (wordmark, nav, headline, buttons) + boot. Mode is `data-mode="room|roam"` on `#top`.
 - `src/*.js` — modules registered as `window.HeroParts[name] = function(ctx)`, run in order:
   core → room → island → mountains → pois1 → pois2 → scatter → person → env → loop → minimap. Each is try/catch'd so one failure doesn't kill the scene. All share one `ctx` (THREE as `T`, renderer, scene, camera, helpers `mat/matF/glow/mesh/box/cyl/sph/inst/safe`, arrays `anim/pois/obstacleCircles/obstacleRects/walls`, `islandR`, `dock`, `chair`, `person`, `api`).
-- `ctx.api`: `rotateBy(rad)`, `enterRoam()`, `exitRoam()`.
+- `ctx.api`: `rotateBy(rad)`, `enterRoam()`, `exitRoam()`, `walkTo(x,z)`, `setPov('drone'|'fps')`.
+- Two POVs (`S0.pov`, `data-pov` on `#top`): drone = ortho isometric camera; fps = perspective camera at eye height (1.38), drag/pointer-lock to look, WASD + Shift, wheel = FOV, V toggles. Fog is always present but pushed to 1e5 in drone view so there is no shader recompile on switch.
 
 ## Design
 - Isometric ortho camera; room mode rotates ±90° around 45° (180° total); walls facing camera shrink so the room stays visible.

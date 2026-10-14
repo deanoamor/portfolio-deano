@@ -13,11 +13,17 @@
     var labelEl = document.getElementById('poi-label');
     var S0 = {
       mode: 'room', modeT: 0, az: reduce ? AZ0 : AZ0 - 0.9, azTarget: AZ0, interacted: false, dragging: false,
-      lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(H.x, 0.1, H.z)
+      lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(H.x, 0.1, H.z),
+      pov: 'drone', yaw: 0, pitch: 0, fov: 68
     };
     var keys = {};
     var zoom = 1, zoomT = 1, ZMIN = 0.5, ZMAX = 2;   // mouse-wheel zoom (multiplies the view height)
     var view = { w: 1440, h: 900 };
+    // first-person camera (the drone view keeps the orthographic one)
+    var fpsCam = new T.PerspectiveCamera(68, 1.6, 0.05, 500);
+    var fovT = 68, EYE = 1.38, bob = 0;
+    var fog = scene.fog = new T.Fog(0xBFE3EC, 1e5, 2e5);   // effectively off until first person
+    var tmpV = new T.Vector3();
     var roomTarget = new T.Vector3(H.x, 0.1, H.z);
 
     // ---------- view size ----------
@@ -26,6 +32,7 @@
       view.h = canvas.clientHeight || 900;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(view.w, view.h, false);
+      fpsCam.aspect = view.w / view.h; fpsCam.updateProjectionMatrix();
     };
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
@@ -101,7 +108,7 @@
           if (ed < 0.15) P.dest = null; else { mx = ex / ed; mz = ez / ed; }
         }
         if (mx || mz) {
-          var step = 3.4 * dt, nx = P.x + mx * step, nz = P.z + mz * step;
+          var step = (S0.pov === 'fps' ? 2.7 : 3.4) * (keys.sh ? 1.7 : 1) * dt, nx = P.x + mx * step, nz = P.z + mz * step;
           if (!blocked(nx, nz)) { P.x = nx; P.z = nz; moving = true; }
           else if (!blocked(nx, P.z)) { P.x = nx; moving = true; }
           else if (!blocked(P.x, nz)) { P.z = nz; moving = true; }
@@ -125,6 +132,39 @@
       S0.interacted = true;
       S0.azTarget = S0.mode === 'room' ? clamp(S0.azTarget + d, AZ_MIN, AZ_MAX) : S0.azTarget + d;
     };
+    var fade = document.getElementById('cut');
+    var setPov = function (pov, instant) {
+      if (pov !== 'fps' && pov !== 'drone') return;
+      if (pov === S0.pov && (pov === 'drone' || S0.mode === 'roam')) return;
+      var go = function () {
+        if (pov === 'fps') {
+          var wasRoam = S0.mode === 'roam';
+          if (!wasRoam) enterRoam();
+          if (!P) return;
+          P.path = []; P.dest = null; marker.visible = false;
+          if (wasRoam) S0.yaw = P.heading + Math.PI;
+          else {   // just left the desk: start inside the house, facing the door
+            P.x = H.x + 2 * H.s; P.z = H.z - 2.5 * H.s; P.y = 0.05 * H.s;
+            S0.yaw = Math.atan2(-3.2, 1.5); S0.pitch = -0.05;
+          }
+          S0.pov = 'fps';
+          P.g.visible = false;
+          fovT = fpsCam.fov = 68;
+          fog.near = 55; fog.far = 190;
+        } else {
+          S0.pov = 'drone';
+          if (P) P.g.visible = true;
+          fog.near = 1e5; fog.far = 2e5;
+          if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock();
+        }
+        rootEl.setAttribute('data-pov', S0.pov);
+        try { canvas.focus({ preventScroll: true }); } catch (e) {}
+        if (ctx.onPov) ctx.onPov(S0.pov);
+      };
+      if (instant || !fade) { go(); return; }
+      fade.style.opacity = '1';
+      setTimeout(function () { go(); fade.style.opacity = '0'; }, 190);
+    };
     var enterRoam = function () {
       if (S0.mode === 'roam' || !P) return;
       S0.mode = 'roam';
@@ -138,6 +178,7 @@
       S0.mode = 'room';
       keys = {};
       marker.visible = false;
+      if (S0.pov === 'fps') setPov('drone', true);
       P.sit();
       S0.az = AZ0 + wrapPi(S0.az - AZ0);
       S0.azTarget = AZ0 + clamp(wrapPi(S0.azTarget - AZ0), -Math.PI / 2, Math.PI / 2);
@@ -147,9 +188,10 @@
       if (S0.mode !== 'roam' || !P || P.mode !== 'walk' || P.path.length) return;
       if (!blocked(x, z)) P.dest = [x, z];
     };
-    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo };
+    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo, setPov: setPov };
     ctx.state = S0;
     rootEl.setAttribute('data-mode', 'room');
+    rootEl.setAttribute('data-pov', 'drone');
 
     // ---------- input ----------
     var raycaster = new T.Raycaster();
@@ -162,13 +204,22 @@
       if (raycaster.ray.intersectPlane(plane, hit)) P.dest = [hit.x, hit.z];
     };
     canvas.addEventListener('pointerdown', function (e) {
-      S0.dragging = true; S0.interacted = true; S0.lastX = e.clientX;
+      S0.dragging = true; S0.interacted = true; S0.lastX = e.clientX; S0.lastY = e.clientY;
       down = { x: e.clientX, y: e.clientY, moved: false };
       try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
       canvas.style.cursor = 'grabbing';
       if (S0.mode === 'roam') { try { canvas.focus({ preventScroll: true }); } catch (err2) {} }
     });
+    var look = function (dx, dy) {
+      S0.yaw -= dx * 0.0042;
+      S0.pitch = clamp(S0.pitch - dy * 0.0036, -1.25, 1.25);
+    };
     canvas.addEventListener('pointermove', function (e) {
+      if (S0.pov === 'fps') {
+        if (document.pointerLockElement === canvas) look(e.movementX || 0, e.movementY || 0);
+        else if (S0.dragging) { look(e.clientX - S0.lastX, e.clientY - (S0.lastY === undefined ? e.clientY : S0.lastY)); S0.lastX = e.clientX; S0.lastY = e.clientY; if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) down.moved = true; }
+        return;
+      }
       if (!S0.dragging) return;
       if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) down.moved = true;
       var d = e.clientX - S0.lastX;
@@ -183,13 +234,18 @@
     };
     canvas.addEventListener('pointerup', function (e) {
       end(e);
-      if (S0.mode === 'roam' && down && !down.moved && P && P.mode === 'walk' && !P.path.length) clickMove(e.clientX, e.clientY);
+      if (S0.pov === 'fps') {
+        if (down && !down.moved && document.pointerLockElement !== canvas && canvas.requestPointerLock) {
+          try { var rq = canvas.requestPointerLock(); if (rq && rq.catch) rq.catch(function () {}); } catch (err3) {}
+        }
+      } else if (S0.mode === 'roam' && down && !down.moved && P && P.mode === 'walk' && !P.path.length) clickMove(e.clientX, e.clientY);
       down = null;
     });
     canvas.addEventListener('pointercancel', end);
     canvas.addEventListener('wheel', function (e) {
       e.preventDefault();
       var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      if (S0.pov === 'fps') { fovT = clamp(fovT + dy * 0.03, 42, 92); return; }
       zoomT = clamp(zoomT * Math.exp(dy * 0.0012), ZMIN, ZMAX);
     }, { passive: false });
     var keyMap = { ArrowUp: 'u', w: 'u', W: 'u', ArrowDown: 'd', s: 'd', S: 'd', ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
@@ -200,19 +256,21 @@
         e.preventDefault();
         keys[k] = true;
         if (P.path.length) { var last = P.path[P.path.length - 1]; P.x = last[0]; P.z = last[1]; P.path = []; }
-      } else if (e.key === 'q' || e.key === 'Q') S0.azTarget += Math.PI / 4;
-      else if (e.key === 'e' || e.key === 'E') S0.azTarget -= Math.PI / 4;
+      } else if (e.key === 'Shift') keys.sh = true;
+      else if (e.key === 'q' || e.key === 'Q') { if (S0.pov === 'fps') S0.yaw += Math.PI / 4; else S0.azTarget += Math.PI / 4; }
+      else if (e.key === 'e' || e.key === 'E') { if (S0.pov === 'fps') S0.yaw -= Math.PI / 4; else S0.azTarget -= Math.PI / 4; }
+      else if (e.key === 'v' || e.key === 'V') setPov(S0.pov === 'fps' ? 'drone' : 'fps');
       else if (e.key === 'Escape') exitRoam();
     });
-    canvas.addEventListener('keyup', function (e) { var k = keyMap[e.key]; if (k) keys[k] = false; });
+    canvas.addEventListener('keyup', function (e) { var k = keyMap[e.key]; if (k) keys[k] = false; if (e.key === 'Shift') keys.sh = false; });
     canvas.addEventListener('blur', function () { keys = {}; });
 
     // ---------- per-frame ----------
-    var updateWalls = function (a, dt) {
+    var updateWalls = function (a, dt, full) {
       var cx = Math.sin(a), cz = Math.cos(a);
       walls.forEach(function (w) {
         var d = w.n[0] * cx + w.n[1] * cz;
-        w.f += ((d > 0.25 ? 0 : 1) - w.f) * Math.min(1, dt * 7);
+        w.f += (((d > 0.25 && !full) ? 0 : 1) - w.f) * Math.min(1, dt * 7);
         w.mesh.scale.y = 0.1 + 0.9 * w.f;
         var s = smooth((w.f - 0.35) / 0.55);
         w.anchor.visible = s > 0.02;
@@ -254,7 +312,7 @@
       var sway = (reduce || S0.interacted) ? 0 : Math.sin(S0.t * 0.5) * 0.05;
       var a = S0.az + sway;
 
-      stepPlayer(dt, S0.t, a);
+      stepPlayer(dt, S0.t, S0.pov === 'fps' ? S0.yaw : a);
 
       S0.modeT = clamp(S0.modeT + (S0.mode === 'roam' ? 1 : -1) * dt / 1.2, 0, 1);
       var e = smooth(S0.modeT);
@@ -268,14 +326,15 @@
       var f = S0.focus;
       camera.position.set(f.x + DIST * Math.cos(EL) * Math.sin(a), f.y + DIST * Math.sin(EL), f.z + DIST * Math.cos(EL) * Math.cos(a));
       camera.lookAt(f);
-      if (ctx.env) ctx.env.update(dt, f, a);
+      var fps = S0.pov === 'fps' && P;
+      if (ctx.env) ctx.env.update(dt, f, fps ? S0.yaw : a);
       else {
         sun.position.set(f.x + Math.sin(a + 0.6) * 9, 15, f.z + Math.cos(a + 0.6) * 9);
         sun.target.position.set(f.x, 0, f.z);
       }
       ctx.shadowPlane.position.x = f.x;
       ctx.shadowPlane.position.z = f.z;
-      updateWalls(S0.az, dt);
+      updateWalls(S0.az, dt, S0.pov === 'fps');
 
       // tall props between the camera and the focus shrink so they never hide the view
       var cx = Math.sin(a), cz = Math.cos(a);
@@ -290,7 +349,19 @@
 
       if (!reduce) for (var i = 0; i < anim.length; i++) anim[i](S0.t, dt, a);
       updateLabel();
-      renderer.render(scene, camera);
+      var cam = camera;
+      if (fps) {
+        var moved = keys.u || keys.d || keys.l || keys.r;
+        bob = moved ? bob + dt * (keys.sh ? 13 : 9) : bob * Math.max(0, 1 - dt * 8);
+        var cp = Math.cos(S0.pitch);
+        fpsCam.fov += (fovT - fpsCam.fov) * Math.min(1, dt * 8); fpsCam.updateProjectionMatrix();
+        fpsCam.position.set(P.x, P.y + EYE + (moved ? Math.sin(bob) * 0.035 : 0), P.z);
+        tmpV.set(P.x - Math.sin(S0.yaw) * cp, P.y + EYE + Math.sin(S0.pitch), P.z - Math.cos(S0.yaw) * cp);
+        fpsCam.lookAt(tmpV);
+        if (ctx.env && ctx.env.haze) { fog.color.copy(ctx.env.haze); scene.background = scene.background || new T.Color(); scene.background.copy(ctx.env.haze); }
+        cam = fpsCam;
+      } else if (scene.background) scene.background = null;
+      renderer.render(scene, cam);
     };
     ctx.raf = requestAnimationFrame(tick);
 

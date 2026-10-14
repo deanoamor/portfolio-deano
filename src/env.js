@@ -8,10 +8,10 @@
 
     // ---------- time of day ----------
     var TIMES = {
-      morning: { sky: '#FFEBD6', ground: '#B8D4CE', hI: 0.62, sun: '#FFD2A0', sI: 0.58, az: 1.5, h: 9, d: 14, water: '#86CFCB', discs: ['#98D8D0', '#B2E2D5', '#CBEEDC'], night: 0, foam: 0.55 },
-      noon: { sky: '#FFF6E8', ground: '#A9C9B8', hI: 0.62, sun: '#FFE8C4', sI: 0.55, az: 0.6, h: 15, d: 9, water: '#7CCBC8', discs: ['#8ED4CF', '#A6DED5', '#BFE9DB'], night: 0, foam: 0.55 },
-      evening: { sky: '#FFD2B2', ground: '#98ACB6', hI: 0.55, sun: '#FF9A62', sI: 0.64, az: -1.15, h: 7, d: 13, water: '#78AEB9', discs: ['#9BBDBF', '#BAC7BE', '#D8D1BB'], night: 0.25, foam: 0.5 },
-      night: { sky: '#5A72B4', ground: '#1E2A44', hI: 0.4, sun: '#A8BCFF', sI: 0.4, az: 0.4, h: 14, d: 8, water: '#1C3A5E', discs: ['#23456C', '#2B5179', '#355E86'], night: 1, foam: 0.2 }
+      morning: { sky: '#FFEBD6', ground: '#B8D4CE', hI: 0.62, sun: '#FFD2A0', sI: 0.58, az: 1.5, h: 9, d: 14, water: '#86CFCB', discs: ['#98D8D0', '#B2E2D5', '#CBEEDC'], night: 0, foam: 0.55, haze: '#F6D8BE' },
+      noon: { sky: '#FFF6E8', ground: '#A9C9B8', hI: 0.62, sun: '#FFE8C4', sI: 0.55, az: 0.6, h: 15, d: 9, water: '#7CCBC8', discs: ['#8ED4CF', '#A6DED5', '#BFE9DB'], night: 0, foam: 0.55, haze: '#BFE3EC' },
+      evening: { sky: '#FFD2B2', ground: '#98ACB6', hI: 0.55, sun: '#FF9A62', sI: 0.64, az: -1.15, h: 7, d: 13, water: '#78AEB9', discs: ['#9BBDBF', '#BAC7BE', '#D8D1BB'], night: 0.25, foam: 0.5, haze: '#F2B48F' },
+      night: { sky: '#5A72B4', ground: '#1E2A44', hI: 0.4, sun: '#A8BCFF', sI: 0.4, az: 0.4, h: 14, d: 8, water: '#1C3A5E', discs: ['#23456C', '#2B5179', '#355E86'], night: 1, foam: 0.2, haze: '#14233E' }
     };
 
     // ---------- seasons (summer is the original palette) ----------
@@ -55,10 +55,11 @@
     // ---------- lighting / water targets ----------
     var C = function (c) { return new T.Color(c); };
     var mk = function () {
-      return { sky: C('#FFFFFF'), ground: C('#A8C8C0'), sun: C('#FFF0D6'), water: C('#7CCBC8'), d0: C('#8ED4CF'), d1: C('#A6DED5'), d2: C('#BFE9DB'),
+      return { sky: C('#FFFFFF'), ground: C('#A8C8C0'), sun: C('#FFF0D6'), water: C('#7CCBC8'), d0: C('#8ED4CF'), d1: C('#A6DED5'), d2: C('#BFE9DB'), haze: C('#BFE3EC'),
         hI: 0.62, sI: 0.5, az: 0.6, h: 15, d: 9, night: 0, foam: 0.55 };
     };
     var cur = mk(), tgt = mk();
+    env.haze = cur.haze;
 
     // ---------- foliage materials that ease colour ----------
     var fades = [];
@@ -154,7 +155,7 @@
     var applyTime = function () {
       var t = TIMES[env.time];
       tgt.sky.set(t.sky); tgt.ground.set(t.ground); tgt.sun.set(t.sun); tgt.water.set(t.water);
-      tgt.d0.set(t.discs[0]); tgt.d1.set(t.discs[1]); tgt.d2.set(t.discs[2]);
+      tgt.haze.set(t.haze); tgt.d0.set(t.discs[0]); tgt.d1.set(t.discs[1]); tgt.d2.set(t.discs[2]);
       tgt.hI = t.hI; tgt.sI = t.sI; tgt.az = t.az; tgt.h = t.h; tgt.d = t.d; tgt.night = t.night; tgt.foam = t.foam;
       if (ctx.windowTex) {
         ctx.windowTex.mat.map = env.time === 'night' ? ctx.windowTex.night : ctx.windowTex.day;
@@ -184,7 +185,7 @@
       var k = first ? 1 : 1 - Math.exp(-dt * 2.6);
       var t = performance.now() / 1000;
       cur.sky.lerp(tgt.sky, k); cur.ground.lerp(tgt.ground, k); cur.sun.lerp(tgt.sun, k); cur.water.lerp(tgt.water, k);
-      cur.d0.lerp(tgt.d0, k); cur.d1.lerp(tgt.d1, k); cur.d2.lerp(tgt.d2, k);
+      cur.haze.lerp(tgt.haze, k); cur.d0.lerp(tgt.d0, k); cur.d1.lerp(tgt.d1, k); cur.d2.lerp(tgt.d2, k);
       ['hI', 'sI', 'az', 'h', 'd', 'night', 'foam'].forEach(function (n) { cur[n] = lerp(cur[n], tgt[n], k); });
       env.night = cur.night;
       hemi.color.copy(cur.sky); hemi.groundColor.copy(cur.ground); hemi.intensity = cur.hI;

@@ -85,10 +85,10 @@
       var P = ctx.person, roam = S0.mode === 'roam' && P && P.mode === 'walk';
       var px = roam ? P.x : H.x, pz = roam ? P.z : H.z;
       // camera view cone from the focus point
-      var f = S0.focus, a = S0.az, dir = Math.atan2(-Math.cos(a), -Math.sin(a));
+      var f = S0.pov === 'fps' && P ? { x: P.x, z: P.z } : S0.focus, a = S0.pov === 'fps' ? S0.yaw : S0.az, dir = Math.atan2(-Math.cos(a), -Math.sin(a));
       g.fillStyle = 'rgba(255,255,255,0.38)';
       g.beginPath(); g.moveTo(mx(f.x), my(f.z));
-      g.arc(mx(f.x), my(f.z), 22 * sc * 1.6, dir - 0.62, dir + 0.62); g.closePath(); g.fill();
+      g.arc(mx(f.x), my(f.z), (S0.pov === 'fps' ? 16 : 22) * sc * 1.6, dir - (S0.pov === 'fps' ? 0.55 : 0.62), dir + (S0.pov === 'fps' ? 0.55 : 0.62)); g.closePath(); g.fill();
       // you
       var pulse = 1 + 0.18 * Math.sin(performance.now() / 260);
       g.fillStyle = '#F4EFE2'; g.strokeStyle = '#0E3B38'; g.lineWidth = 2;

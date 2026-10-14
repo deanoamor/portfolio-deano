@@ -22,6 +22,13 @@ button{pointer-events:auto}
 .round:hover{transform:translateY(-2px)}
 .round:active{transform:translateY(3px);box-shadow:0 1px 0 #0E3B38}
 #poi-label{transition:opacity .25s}
+[data-pov="fps"] #btn-left,[data-pov="fps"] #btn-right{display:none !important}
+.only-fps{display:none}
+[data-pov="fps"] .only-fps{display:inline}
+[data-pov="fps"] .only-drone{display:none}
+#cut{position:absolute;inset:0;z-index:2;background:#F4EFE2;opacity:0;pointer-events:none;transition:opacity .19s ease}
+#crosshair{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#F4EFE2;border:1.5px solid #0E3B38;z-index:2;pointer-events:none;display:none;opacity:.85}
+[data-pov="fps"][data-mode="roam"] #crosshair{display:block}
 .seg{display:inline-flex;padding:3px;border-radius:999px;background:#F4EFE2;border:2px solid #0E3B38;box-shadow:0 3px 0 #0E3B38}
 .seg button{border:0;background:transparent;color:#0E3B38;font:600 14px/1 'DM Sans','Helvetica Neue',sans-serif;min-height:34px;padding:0 14px;border-radius:999px;cursor:pointer;transition:background .15s}
 .seg button:hover{background:#E6E0CD}
@@ -40,6 +47,8 @@ button{pointer-events:auto}
 
   <!-- top bar -->
   <div id="fx" aria-hidden="true"></div>
+  <div id="cut" aria-hidden="true"></div>
+  <div id="crosshair" aria-hidden="true"></div>
 
   <!-- season + time of day -->
   <div style="position: absolute; top: 24px; left: 24px; right: 224px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; pointer-events: none">
@@ -55,6 +64,10 @@ button{pointer-events:auto}
       <button type="button" data-time="evening" aria-pressed="false">Evening</button>
       <button type="button" data-time="night" aria-pressed="false">Night</button>
     </div>
+    <div class="seg" id="seg-pov" role="group" aria-label="Camera view" style="pointer-events: auto">
+      <button type="button" data-pov="drone" aria-pressed="true">Drone view</button>
+      <button type="button" data-pov="fps" aria-pressed="false">First person</button>
+    </div>
   </div>
 
   <!-- minimap -->
@@ -65,7 +78,7 @@ button{pointer-events:auto}
   <!-- roam mode: back + help -->
   <div class="only-roam" style="position: absolute; left: 40px; bottom: 48px; z-index: 2; align-items: center; flex-wrap: wrap; gap: 16px">
     <button type="button" class="round" id="btn-exit" style="min-height: 52px; padding: 0 24px; border-radius: 999px; border: 2px solid #0E3B38; background: #F4EFE2; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; font-family: inherit; font-weight: 600; font-size: 16px; cursor: pointer">← Back to room</button>
-    <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; max-width: 300px; line-height: 1.4; pointer-events: none">Click to walk · WASD or arrows · drag to look around</span>
+    <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; max-width: 320px; line-height: 1.4; pointer-events: none; text-shadow: 0 0 6px #F4EFE2, 0 0 2px #F4EFE2"><span class="only-drone">Click to walk · WASD or arrows · drag to look around · V for first person</span><span class="only-fps">WASD to walk · Shift to run · drag or click to look · scroll to zoom · V for drone view</span></span>
   </div>
 
   <!-- roam mode: nearby place -->
@@ -123,6 +136,15 @@ button{pointer-events:auto}
   };
   pick('seg-season', 'season');
   pick('seg-time', 'time');
+  var povGroup = document.getElementById('seg-pov');
+  var syncPov = function (p) {
+    povGroup.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-pov') === p ? 'true' : 'false'); });
+  };
+  ctx.onPov = syncPov;
+  povGroup.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) ctx.api.setPov(b.getAttribute('data-pov'));
+  });
 })();
 </script>
 </body>
