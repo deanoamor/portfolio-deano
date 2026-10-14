@@ -25,12 +25,12 @@
     var inHouseView = function (x, z) { return x - H.x + (z - H.z) > -2 && Math.hypot(x - H.x, z - H.z) < 16; };
     var okTree = function (x, z) {
       if (inHouseView(x, z)) return false;
-      if (nearHome(x, z, 3.2) || !onLand(x, z, 1.8) || ctx.nearPath(x, z, 1.7) || distDock(x, z) < 3.5) return false;
+      if (nearHome(x, z, 3.2) || !onLand(x, z, 1.8) || ctx.nearPath(x, z, 2.6) || distDock(x, z) < 3.5) return false;
       for (var i = 0; i < pois.length; i++) if (Math.hypot(pois[i].x - x, pois[i].z - z) < pois[i].clear) return false;
       return free(x, z, 1.5);
     };
     var okSmall = function (x, z, pad) {
-      return !nearHome(x, z, 1.4) && onLand(x, z, 2.0) && !ctx.nearPath(x, z, 0.9) && distDock(x, z) > 1.5 && free(x, z, pad);
+      return !nearHome(x, z, 1.4) && onLand(x, z, 2.0) && !ctx.nearPath(x, z, 1.7) && distDock(x, z) > 1.5 && free(x, z, pad);
     };
 
     // ---------- forest around the edge ----------
@@ -73,7 +73,7 @@
         var th = rnd() * Math.PI * 2;
         var r = islandR(th) - 1.8 - rnd() * 34;
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
-        if (!okSmall(x, z, 0.8)) continue;
+        if (!okSmall(x, z, 0.8) || ctx.nearPath(x, z, 2.6)) continue;
         var s = 0.35 + rnd() * 0.5;
         var m = mesh(root, gIco, matF(C.rock), x, GY + s * 0.15, z);
         m.scale.set(s, s * 0.7, s);

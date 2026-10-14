@@ -215,21 +215,33 @@
     P([[-8.8, -2.2], [-9.5, 1.5], [-11.5, 4.5], [-13.6, 6.9]]);
     P([[-9.5, 1.5], [-8.0, 5.5], [-6.5, 9.0], [-5.5, 11.0]]);
     // paving: a dark bed under overlapping tan flagstones
-    var stones = [], bedMat = mat('#8B6B44');
+    var stones = [], bedMat = mat('#8B6B44'), grid = {};
+    var free = function (x, z) {
+      var gx = Math.floor(x / 1.1), gz = Math.floor(z / 1.1);
+      for (var i = -1; i <= 1; i++) for (var j = -1; j <= 1; j++) {
+        var b = grid[(gx + i) + ',' + (gz + j)];
+        if (b) for (var k = 0; k < b.length; k++) if (Math.hypot(b[k][0] - x, b[k][1] - z) < 0.98) return false;
+      }
+      (grid[gx + ',' + gz] = grid[gx + ',' + gz] || []).push([x, z]);
+      return true;
+    };
     var tileCols = ['#E6C78C', '#DDB97A', '#EBD09B', '#D2AE6E', '#E2C284'];
     paths.forEach(function (pl) {
       for (var i = 0; i < pl.length - 1; i++) {
         var ax = pl[i][0], az = pl[i][1], bx = pl[i + 1][0], bz = pl[i + 1][1];
         var len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
         var bed = mesh(root, new T.BoxGeometry(1.9, 0.06, len + 0.5), bedMat, (ax + bx) / 2, GY + 0.03, (az + bz) / 2, 0, ang, 0, false);
+        bed.material = bedMat;
         bed.receiveShadow = true;
-        var n = Math.max(1, Math.round(len / 0.9)), nx = Math.cos(ang), nz = -Math.sin(ang);
+        var n = Math.max(1, Math.round(len / 1.05)), nx = Math.cos(ang), nz = -Math.sin(ang);
         for (var k = 0; k < n; k++) {
           var t = (k + 0.5) / n;
           for (var side = -1; side <= 1; side += 2) {
-            var off = side * (0.42 + rnd() * 0.12);
-            var s2 = 0.78 + rnd() * 0.32;
-            stones.push({ x: ax + (bx - ax) * t + nx * off + (rnd() - 0.5) * 0.2, y: GY + 0.07, z: az + (bz - az) * t + nz * off + (rnd() - 0.5) * 0.2, ry: rnd() * 3, sx: s2, sy: 1, sz: s2 * (0.85 + rnd() * 0.3), c: tileCols[Math.floor(rnd() * tileCols.length)] });
+            var off = side * (0.5 + rnd() * 0.06);
+            var s2 = 0.74 + rnd() * 0.2;
+            var tx = ax + (bx - ax) * t + nx * off + (rnd() - 0.5) * 0.1, tz = az + (bz - az) * t + nz * off + (rnd() - 0.5) * 0.1;
+            if (!free(tx, tz)) continue;
+            stones.push({ x: tx, y: GY + 0.07, z: tz, ry: rnd() * 3, sx: s2, sy: 1, sz: s2 * (0.9 + rnd() * 0.2), c: tileCols[Math.floor(rnd() * tileCols.length)] });
           }
         }
       }
