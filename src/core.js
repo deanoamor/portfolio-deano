@@ -146,7 +146,52 @@
       return im;
     };
 
+
+    // merge static meshes that share a material into one mesh each (keeps draw calls low)
+    var bake = function (g) {
+      g.updateMatrixWorld(true);
+      var inv = new T.Matrix4().copy(g.matrixWorld).invert();
+      var buckets = {}, order = [], dead = [];
+      var walk = function (o) {
+        if (o.userData.noMerge) return;
+        if (o !== g && o.isMesh && !o.isInstancedMesh && !Array.isArray(o.material) && o.visible) {
+          var key = o.material.uuid + (o.castShadow ? 'c' : 'n');
+          var geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+          geo.applyMatrix4(new T.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+          if (!buckets[key]) { buckets[key] = { m: o.material, cast: o.castShadow, geos: [] }; order.push(key); }
+          buckets[key].geos.push(geo);
+          dead.push(o);
+          return;
+        }
+        for (var i = 0; i < o.children.length; i++) walk(o.children[i]);
+      };
+      walk(g);
+      dead.forEach(function (o) { o.parent.remove(o); });
+      order.forEach(function (k) {
+        var b = buckets[k], n = 0;
+        b.geos.forEach(function (gm) { n += gm.attributes.position.count; });
+        var hasCol = !!b.geos[0].attributes.color;
+        var pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = hasCol ? new Float32Array(n * 3) : null, o3 = 0, o2 = 0;
+        b.geos.forEach(function (gm) {
+          pos.set(gm.attributes.position.array, o3); nor.set(gm.attributes.normal.array, o3);
+          if (gm.attributes.uv) uv.set(gm.attributes.uv.array, o2);
+          if (hasCol && gm.attributes.color) col.set(gm.attributes.color.array, o3);
+          o3 += gm.attributes.position.count * 3; o2 += gm.attributes.position.count * 2;
+          gm.dispose();
+        });
+        var mg = new T.BufferGeometry();
+        mg.setAttribute('position', new T.BufferAttribute(pos, 3));
+        mg.setAttribute('normal', new T.BufferAttribute(nor, 3));
+        mg.setAttribute('uv', new T.BufferAttribute(uv, 2));
+        if (hasCol) mg.setAttribute('color', new T.BufferAttribute(col, 3));
+        var m = new T.Mesh(mg, b.m);
+        m.castShadow = b.cast; m.receiveShadow = true;
+        g.add(m);
+      });
+    };
+
     Object.assign(ctx, {
+      bake: bake,
       T: T, canvas: canvas, renderer: renderer, scene: scene, camera: camera, sun: sun, root: root,
       shadowPlane: shadowPlane, hemi: hemi, discs: discs, waterBase: waterBase, foamMat: foamMat, lanterns: [], blobs: [], islandR: islandR, home: home, WATER_Y: WATER_Y, GY: -0.3,
       clamp: clamp, smooth: smooth, lerp: lerp, wrapPi: wrapPi, rnd: rnd, reduce: reduce, safe: safe, C: C,

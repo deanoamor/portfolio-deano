@@ -17,32 +17,32 @@
     // ---------- seasons (summer is the original palette) ----------
     var SEASONS = {
       spring: {
-        grass: '#8FDB9C', sand: '#EFDDAE', hills: '#86CD92',
-        pine: ['#46A074', '#5BB886'], round: ['#78CF9C', '#69C48D'], deep: ['#4AA27C', '#3D9270'], warm: ['#F7B2C4', '#F29CB5'],
-        cherry: ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'], bush: ['#69C48D', '#5BB886'],
-        tufts: ['#69C48D', '#5BB886'], flowers: ['#F2C14E', '#E8896B', '#F4EFE2', '#F7B2C4', '#B79CF2', '#FF9EB5'], flowersOn: true,
+        grass: '#8CCB52', sand: '#FFFFFF', hills: '#7DBE48',
+        pine: ['#4EA04A', '#5CB058'], round: ['#68B85A', '#78C666'], deep: ['#3F9048', '#4AA050'], warm: ['#F7B2C4', '#F29CB5'],
+        cherry: ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'], bush: ['#5EAE4E', '#4FA044'],
+        tufts: ['#7EC254', '#6DB548'], flowers: ['#F2C14E', '#E8896B', '#F4EFE2', '#F7B2C4', '#B79CF2', '#FF9EB5'], flowersOn: true,
         petal: '#F9B8CA', petalsGround: ['#F9B8CA', '#FAC6D2'], pond: ['#7FD0E0', '#9BDCE8'],
         fall: { colors: ['#F9B8CA', '#FAC6D2', '#F7A1BA'], n: 90, size: 5, speed: 1.5 }
       },
       summer: {
-        grass: '#86CF8F', sand: '#EAD9A8', hills: '#7BC287',
-        pine: ['#3E9368', '#4FA877'], round: ['#6CC08F', '#5FB07A'], deep: ['#3F8F6B', '#357F5E'], warm: ['#F2A65A', '#E8896B'],
-        cherry: ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'], bush: ['#5FB07A', '#4FA877'],
-        tufts: ['#5FB07A', '#4FA877'], flowers: ['#F2C14E', '#E8896B', '#F4EFE2', '#F7B2C4', '#B79CF2', '#FF9EB5'], flowersOn: true,
+        grass: '#7DBE45', sand: '#FFFFFF', hills: '#6FB03F',
+        pine: ['#3C8A3A', '#46963F'], round: ['#4A9A3E', '#58A843'], deep: ['#2F7434', '#3A8038'], warm: ['#6FA43C', '#80B442'],
+        cherry: ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'], bush: ['#4E9A3E', '#3F8838'],
+        tufts: ['#6DB548', '#5CA53F'], flowers: ['#F2C14E', '#E8896B', '#F4EFE2', '#F7B2C4', '#B79CF2', '#FF9EB5'], flowersOn: true,
         petal: '#F9B8CA', petalsGround: ['#F9B8CA', '#FAC6D2'], pond: ['#7FD0E0', '#9BDCE8'],
         fall: { colors: ['#FFFFFF'], n: 0, size: 4, speed: 1 }
       },
       autumn: {
-        grass: '#BFC66E', sand: '#E3CF9C', hills: '#B3B866',
-        pine: ['#3F7F5E', '#4C8F6A'], round: ['#F2A65A', '#E8896B'], deep: ['#E2B24A', '#D9A038'], warm: ['#E2603F', '#C94D3A'],
+        grass: '#B9B24E', sand: '#F4EAD8', hills: '#A9A444',
+        pine: ['#3F7F45', '#4C8F50'], round: ['#E09A3C', '#D2802F'], deep: ['#E8B84A', '#D9A238'], warm: ['#D2542F', '#B94528'],
         cherry: ['#F2A65A', '#E8896B', '#E2603F', '#F0B860'], bush: ['#C99A48', '#B88A3E'],
         tufts: ['#C9B45A', '#B8A04C'], flowers: ['#E2603F', '#F2A65A', '#E2B24A', '#C94D3A', '#D98B4E', '#F0B860'], flowersOn: true,
         petal: '#E8896B', petalsGround: ['#E8896B', '#F2A65A'], pond: ['#78C2CE', '#92D0D8'],
         fall: { colors: ['#E8896B', '#F2A65A', '#E2603F', '#F2C14E'], n: 150, size: 6, speed: 2.2 }
       },
       winter: {
-        grass: '#EAF3F4', sand: '#E6E4D6', hills: '#DCE9EC',
-        pine: ['#4E8478', '#5E9588'], round: ['#E2EEF1', '#D3E3E8'], deep: ['#D9E7EB', '#C9DBE1'], warm: ['#EEF4F5', '#DDE9ED'],
+        grass: '#EAF3F4', sand: '#F2F6FA', hills: '#DCE9EC',
+        pine: ['#3E6F5D', '#4E8270'], round: ['#DCE7EA', '#C9D9DE'], deep: ['#D3E2E6', '#C3D5DB'], warm: ['#EEF4F5', '#DDE9ED'],
         cherry: ['#F1E3E8', '#E9D8DF', '#F7EEF1', '#ECDDE3'], bush: ['#D3E2E6', '#C3D5DB'],
         tufts: ['#D0DFE3', '#C0D2D8'], flowers: ['#FFFFFF'], flowersOn: false,
         petal: '#FFFFFF', petalsGround: ['#FFFFFF', '#F1F6F7'], pond: ['#CFE9EE', '#E3F3F5'],
@@ -168,7 +168,7 @@
       insts.forEach(function (it) {
         var v = it.role === 'tufts' ? s.tufts : it.role === 'flowerHeads' ? s.flowers : it.role === 'petalsGround' ? s.petalsGround : null;
         if (v) it.to.forEach(function (c, i) { c.set(v[i % v.length]); });
-        if (it.role === 'flowerHeads' || it.role === 'flowerStems') it.mesh.visible = s.flowersOn;
+        if (it.role === 'flowerHeads' || it.role === 'flowerStems' || it.role === 'daisies') it.mesh.visible = s.flowersOn;
       });
       if (ctx.mountains) ctx.mountains.recolor(env.season);
       setFall(s.fall);
@@ -285,8 +285,8 @@
       scene.add(m);
       ribbons.push({ m: m, base: base, ph: ph });
     };
-    makeRibbon(1.45, 2.35, 0.5, 0);
-    makeRibbon(3.1, 3.55, 0.32, 2.1);
+    makeRibbon(0.15, 1.2, 0.55, 0);
+    makeRibbon(2.0, 2.5, 0.3, 2.1);
 
     // twinkling highlights on the water
     var sparkTex = ctx.tex(32, 32, function (g) {
@@ -358,7 +358,33 @@
     fireGlow.rotation.x = -Math.PI / 2; fireGlow.position.set(11.5, GY + 0.1, -9.4);
     scene.add(fireGlow);
 
+
+    // cartoon clouds drifting around the island (kept clear of the north bay so the sea stays visible)
+    var cloudGeo = new T.IcosahedronGeometry(1, 1);
+    var cloudMat = new T.MeshStandardMaterial({ color: '#F6F9FA', flatShading: true, roughness: 1, emissive: '#9FB2BA', emissiveIntensity: 0.18 });
+    var cloudGroups = [];
+    for (var cg = 0; cg < 26; cg++) {
+      var th = (cg / 26) * Math.PI * 2 + rnd() * 0.2;
+      var dBay = Math.abs(Math.atan2(Math.sin(th + Math.PI / 2), Math.cos(th + Math.PI / 2)));
+      if (dBay < 1.05) continue;
+      var rad = islandR(th) + 8 + rnd() * 26;
+      var cgp = new T.Group();
+      cgp.position.set(Math.cos(th) * rad, WY + 0.2 + rnd() * 2.2, Math.sin(th) * rad);
+      var puffs = 4 + Math.floor(rnd() * 4);
+      for (var pf = 0; pf < puffs; pf++) {
+        var pm = new T.Mesh(cloudGeo, cloudMat);
+        var psz = 2.4 + rnd() * 3.2;
+        pm.scale.set(psz * 1.3, psz * 0.62, psz);
+        pm.position.set((pf - puffs / 2) * 2.6 + rnd() * 1.2, rnd() * 1.2, (rnd() - 0.5) * 3);
+        pm.castShadow = false; pm.receiveShadow = true;
+        cgp.add(pm);
+      }
+      root.add(cgp);
+      cloudGroups.push({ g: cgp, ph: rnd() * 6.28, y0: cgp.position.y });
+    }
+
     var extraUpdate = function (dt, f, t) {
+      cloudGroups.forEach(function (c) { c.g.position.y = c.y0 + Math.sin(t * 0.25 + c.ph) * 0.35; });
       var night = cur.night;
       ribbons.forEach(function (r) {
         var w = Math.sin(t * 0.8 + r.ph);

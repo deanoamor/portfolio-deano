@@ -5,7 +5,7 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 ## Structure
 - `index.html` — overlay UI (wordmark, nav, headline, buttons) + boot. Mode is `data-mode="room|roam"` on `#top`.
 - `src/*.js` — modules registered as `window.HeroParts[name] = function(ctx)`, run in order:
-  core → room → island → mountains → pois1 → pois2 → scatter → person → env → loop → minimap. Each is try/catch'd so one failure doesn't kill the scene. All share one `ctx` (THREE as `T`, renderer, scene, camera, helpers `mat/matF/glow/mesh/box/cyl/sph/inst/safe`, arrays `anim/pois/obstacleCircles/obstacleRects/walls`, `islandR`, `dock`, `chair`, `person`, `api`).
+  core → room → island → mountains → pois1 → pois2 → scatter → person → env → post → loop → minimap. Each is try/catch'd so one failure doesn't kill the scene. All share one `ctx` (THREE as `T`, renderer, scene, camera, helpers `mat/matF/glow/mesh/box/cyl/sph/inst/safe`, arrays `anim/pois/obstacleCircles/obstacleRects/walls`, `islandR`, `dock`, `chair`, `person`, `api`).
 - `ctx.api`: `rotateBy(rad)`, `enterRoam()`, `exitRoam()`, `walkTo(x,z)`, `setPov('drone'|'fps')`.
 - Two POVs (`S0.pov`, `data-pov` on `#top`): drone = ortho isometric camera; fps = perspective camera at eye height (1.38), drag/pointer-lock to look, WASD + Shift, wheel = FOV, V toggles. Fog is always present but pushed to 1e5 in drone view so there is no shader recompile on switch.
 
@@ -18,6 +18,10 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 ## Scale
 - Person = 1.5 units tall. The house (room.js, built at full size in local coords) lives in a group scaled `ctx.home.s` (0.5) at `ctx.home.{x,z}`; collisions/person path are converted to world coords. Everything else is modelled at world scale.
 - Island is wide (R≈38) with a bay cut in the north (`islandR` in core.js); the house sits on the north shore so the sea shows behind it. Island centre is the origin.
+
+## Look (painterly)
+- `post.js`: scene renders into a target with a depth texture; one full-screen pass applies a Kuwahara brush filter, ink outlines from depth/luma edges and a colour grade. It drops the brush filter, then itself, if frames stay slow (`window.HERO_NO_ADAPT = true` disables that for tests).
+- Trees are leafy jittered icospheres with grey-scale vertex colours (hue comes from the seasonal material), merged per material by `ctx.bake` (`ctx.bakeForest()`). Island edge is a stone-brick retaining wall, paths are a dark bed + overlapping flagstones, daisies are instanced discs, cottages + river live in `pois2.js`.
 
 ## House
 - Two storeys, built in `room.js` at full size and scaled by `ctx.home.s`: ground floor = living room + workstation (NE), kitchen (SE), bedroom (NW), bathroom (SW); upstairs = lounge. Footprint ±11 x ±7.5 local units (`ctx.houseGeo`). Walls are built from pieces with real door/window openings (`makeWall`); partitions are waist-high in the drone cutaway (`w.part`) and full height in first person.

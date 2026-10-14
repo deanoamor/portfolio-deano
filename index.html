@@ -116,12 +116,13 @@ button{pointer-events:auto}
 <script src="./src/scatter.js"></script>
 <script src="./src/person.js"></script>
 <script src="./src/env.js"></script>
+<script src="./src/post.js"></script>
 <script src="./src/loop.js"></script>
 <script src="./src/minimap.js"></script>
 <script>
 (function () {
   var ctx = { canvas: document.getElementById('hero-canvas') };
-  ['core','room','island','mountains','pois1','pois2','scatter','person','env','loop','minimap'].forEach(function (n) {
+  ['core','room','island','mountains','pois1','pois2','scatter','person','env','post','loop','minimap'].forEach(function (n) {
     try { window.HeroParts[n](ctx); } catch (e) { console.error('Island part "' + n + '" failed', e); }
   });
   var on = function (id, fn) { document.getElementById(id).addEventListener('click', fn); };

@@ -24,12 +24,36 @@
     });
     grassTex.wrapS = grassTex.wrapT = T.RepeatWrapping;
     grassTex.repeat.set(1 / 26, 1 / 26);
+    // brick texture for the stone retaining walls around the island
+    var stoneTex = ctx.tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#3d474f'; g.fillRect(0, 0, w, h);
+      var rows = 4, bh = h / rows;
+      for (var r = 0; r < rows; r++) {
+        var x = (r % 2) * 40 - 20;
+        while (x < w) {
+          var bw = 70 + Math.random() * 44;
+          var l = 98 + Math.random() * 38;
+          g.fillStyle = 'rgb(' + Math.round(l * 0.86) + ',' + Math.round(l * 0.98) + ',' + Math.round(l * 1.08) + ')';
+          g.fillRect(x + 3, r * bh + 3, bw - 6, bh - 6);
+          g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(x + 3, r * bh + 3, bw - 6, 4);
+          g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(x + 3, r * bh + bh - 8, bw - 6, 5);
+          x += bw;
+        }
+      }
+    });
+    stoneTex.wrapS = stoneTex.wrapT = T.RepeatWrapping;
+    stoneTex.repeat.set(1 / 5.0, 1 / 2.4);
+    var stoneTex2 = stoneTex.clone(); stoneTex2.needsUpdate = true; stoneTex2.repeat.set(5, 1.5);
+    var mkLeaf = function (c) { return new T.MeshStandardMaterial({ color: c, flatShading: true, roughness: 1, metalness: 0, vertexColors: true }); };
     var fol = ctx.fol = {
-      grass: (function () { var m = mkF('#86CF8F'); m.map = grassTex; return m; })(), sand: mkF('#EAD9A8'), hills: mkF('#7BC287'),
-      pine: [mkF('#3E9368'), mkF('#4FA877')], round: [mkF('#6CC08F'), mkF('#5FB07A')],
-      deep: [mkF('#3F8F6B'), mkF('#357F5E')], warm: [mkF('#F2A65A'), mkF('#E8896B')],
-      cherry: [mkF('#F7B2C4'), mkF('#F29CB5'), mkF('#FAC6D2'), mkF('#F5A9BE')],
-      bush: [mkF('#5FB07A'), mkF('#4FA877')]
+      grass: (function () { var m = mkF('#7DBE45'); m.map = grassTex; return m; })(),
+      sand: (function () { var m = mkF('#FFFFFF'); m.map = stoneTex; return m; })(),
+      stone2: (function () { var m = mkF('#FFFFFF'); m.map = stoneTex2; return m; })(),
+      hills: mkF('#6FB03F'), trunk: mkF('#6B4A30'),
+      pine: [mkLeaf('#3C8A3A'), mkLeaf('#46963F')], round: [mkLeaf('#4A9A3E'), mkLeaf('#58A843')],
+      deep: [mkLeaf('#2F7434'), mkLeaf('#3A8038')], warm: [mkLeaf('#6FA43C'), mkLeaf('#80B442')],
+      cherry: [mkLeaf('#F7B2C4'), mkLeaf('#F29CB5'), mkLeaf('#FAC6D2'), mkLeaf('#F5A9BE')],
+      bush: [mkLeaf('#4E9A3E'), mkLeaf('#3F8838')]
     };
 
     // ---------- the island body (organic outline, extruded, flat shaded) ----------
@@ -48,43 +72,70 @@
       geo.translate(0, topY - depth, 0);
       return mesh(root, geo, typeof color === 'string' ? matF(color) : color, 0, 0, 0);
     };
-    layer(outline(1, 0), 0.4, GY, fol.grass);
-    layer(outline(1, 1.5), 0.7, -0.65, fol.sand);
-    layer(outline(0.86, 0), 2.0, -0.7, '#9A7451');
+    layer(outline(1, 0.28), 0.45, GY, fol.grass);                 // grass lip
+    layer(outline(1, 0), 3.4, GY - 0.4, fol.sand);                 // stone retaining wall
 
     // ---------- small islets far out in the lake ----------
     var blob = function (px, pz, r) {
-      mesh(root, new T.CylinderGeometry(r, r * 1.03, 0.4, 10), fol.grass, px, -0.5, pz);
-      mesh(root, new T.CylinderGeometry(r * 1.12, r * 1.18, 0.7, 10), fol.sand, px, -1.0, pz);
-      mesh(root, new T.CylinderGeometry(r, r * 0.8, 2.0, 10), matF('#9A7451'), px, -1.65, pz);
+      mesh(root, new T.CylinderGeometry(r * 1.05, r * 1.05, 0.45, 12), fol.grass, px, -0.5, pz);
+      mesh(root, new T.CylinderGeometry(r, r * 0.88, 3.0, 12), fol.stone2, px, -2.2, pz);
     };
 
-    // ---------- trees (shared geometry) ----------
-    var gTrunk = new T.CylinderGeometry(0.15, 0.22, 1, 7), gCone = new T.ConeGeometry(1, 1, 7), gIco = new T.IcosahedronGeometry(1, 0);
+    // ---------- trees: leafy broadleaf crowns (jittered icospheres, grey-scale vertex colours; hue comes from the season) ----------
+    var gIco = new T.IcosahedronGeometry(1, 0);
+    (function () {   // grey-scale vertex colours so bushes and blossom crowns (leaf materials) shade like the trees
+      var P = gIco.attributes.position, col = new Float32Array(P.count * 3);
+      for (var i = 0; i < P.count; i++) {
+        var lum = 0.72 + 0.42 * ((P.getY(i) + 1) / 2) + ((Math.floor(i / 3) * 0.37) % 1 - 0.5) * 0.2;
+        col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = lum;
+      }
+      gIco.setAttribute('color', new T.BufferAttribute(col, 3));
+    })();
     ctx.gIco = gIco;
-    var treeCols = [fol.pine, fol.round, fol.deep, fol.warm];
-    ctx.tree = function (x, y, z, kind, s, track) {
-      var g = new T.Group();
-      g.position.set(x, y, z);
-      g.scale.setScalar(s);
-      root.add(g);
-      mesh(g, gTrunk, matF(C.woodDark), 0, 0.5, 0);
-      var cols = treeCols[kind === 0 ? 0 : kind];
-      if (kind === 0) {
-        [[1.15, 1.5, 1.45], [0.9, 1.3, 2.1], [0.62, 1.1, 2.7]].forEach(function (c, i) {
-          var m = mesh(g, gCone, cols[i % 2], 0, c[2], 0);
-          m.scale.set(c[0], c[1], c[0]);
-        });
-      } else {
-        var a = mesh(g, gIco, cols[0], 0, 1.9, 0); a.scale.setScalar(1.05);
-        var b = mesh(g, gIco, cols[1], 0.55, 1.35, 0.3); b.scale.setScalar(0.75);
+    var hash = function (x, y, z) { var h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return h - Math.floor(h); };
+    var LEAF_DETAIL = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 1 : 2;
+    var leafGeos = [0, 1, 2, 3].map(function (k) {
+      var g = new T.IcosahedronGeometry(1, LEAF_DETAIL), P = g.attributes.position, col = new Float32Array(P.count * 3);
+      for (var i = 0; i < P.count; i++) {
+        var x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+        var key = Math.round(x * 50) + k * 7, k2 = Math.round(y * 50) + k * 13, k3 = Math.round(z * 50) + k * 29;
+        var j = 1 + (hash(key, k2, k3) - 0.5) * (LEAF_DETAIL > 1 ? 0.3 : 0.34);
+        P.setXYZ(i, x * j, y * j * 0.92, z * j);
+        var face = Math.floor(i / 3), fl = (hash(face, k, 3) - 0.5) * (LEAF_DETAIL > 1 ? 0.42 : 0.28);
+        var lum = 0.66 + 0.5 * ((y + 1) / 2) + fl;
+        col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = lum;
       }
-      if (track) {
-        circ(x, z, 0.5 * s);
-        ctx.blobs.push([x, z, 1.5 * s]);
-      }
+      g.setAttribute('color', new T.BufferAttribute(col, 3));
+      g.computeVertexNormals();
       return g;
+    });
+    var gTrunk = new T.CylinderGeometry(0.3, 0.5, 1, 7), gRoot = new T.CylinderGeometry(0.5, 1.0, 0.8, 7);
+    var forest = ctx.forest = new T.Group();
+    root.add(forest);
+    var treeCols = [fol.pine, fol.round, fol.deep, fol.warm];
+    var crowns = [
+      [[0, 3.5, 0, 1.75], [1.35, 2.9, 0.5, 1.3], [-1.3, 3.0, -0.4, 1.35], [0.3, 3.1, -1.4, 1.25], [-0.5, 3.2, 1.3, 1.25], [0.2, 4.5, 0.1, 1.15]],
+      [[0, 3.0, 0, 1.45], [1.0, 2.5, 0.4, 1.0], [-0.9, 2.6, -0.3, 1.05], [0.1, 3.9, 0.1, 0.9]],
+      [[0, 2.2, 0, 1.5], [1.3, 1.9, 0.5, 1.1], [-1.2, 1.9, -0.4, 1.15], [0.2, 2.4, -1.2, 1.0], [-0.3, 2.5, 1.2, 1.0]],
+      [[0, 3.6, 0, 1.8], [1.4, 3.0, 0.5, 1.3], [-1.3, 3.1, -0.4, 1.35], [0.3, 3.2, -1.4, 1.25], [0.2, 4.6, 0.1, 1.2]]
+    ];
+    ctx.tree = function (x, y, z, kind, s, track) {
+      var cols = treeCols[kind], rot = hash(x, z, 3) * 6.28;
+      var cs = Math.cos(rot), sn = Math.sin(rot);
+      var tr = mesh(forest, gTrunk, fol.trunk, x, y + 0.5 * s * 2.4, z); tr.scale.set(s, s * 2.4, s);
+      var rt = mesh(forest, gRoot, fol.trunk, x, y + 0.3 * s, z); rt.scale.set(s, s, s);
+      crowns[kind].forEach(function (c, i) {
+        var lx = c[0] * cs - c[2] * sn, lz = c[0] * sn + c[2] * cs;
+        var m = mesh(forest, leafGeos[(i + kind) % 4], cols[i % 2], x + lx * s, y + c[1] * s, z + lz * s);
+        m.scale.setScalar(c[3] * s);
+        m.rotation.y = hash(i, x, z) * 6.28;
+      });
+      if (track) {
+        circ(x, z, 0.55 * s);
+        ctx.blobs.push([x, z, 1.9 * s]);
+      }
     };
+    ctx.bakeForest = function () { ctx.bake(forest); };
     ctx.bench = function (x, z, tx, tz) {
       var g = new T.Group();
       g.position.set(x, GY, z);
@@ -163,20 +214,28 @@
     P([[14.0, 0.0], [13.0, 4.5], [11.6, 5.6], [8.5, 5.2], [6.3, 8.0], [5.0, 10.2]]);
     P([[-8.8, -2.2], [-9.5, 1.5], [-11.5, 4.5], [-13.6, 6.9]]);
     P([[-9.5, 1.5], [-8.0, 5.5], [-6.5, 9.0], [-5.5, 11.0]]);
-    var stones = [];
+    // paving: a dark bed under overlapping tan flagstones
+    var stones = [], bedMat = mat('#8B6B44');
+    var tileCols = ['#E6C78C', '#DDB97A', '#EBD09B', '#D2AE6E', '#E2C284'];
     paths.forEach(function (pl) {
       for (var i = 0; i < pl.length - 1; i++) {
         var ax = pl[i][0], az = pl[i][1], bx = pl[i + 1][0], bz = pl[i + 1][1];
-        var n = Math.max(1, Math.round(Math.hypot(bx - ax, bz - az) / 1.25));
+        var len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
+        var bed = mesh(root, new T.BoxGeometry(1.9, 0.06, len + 0.5), bedMat, (ax + bx) / 2, GY + 0.03, (az + bz) / 2, 0, ang, 0, false);
+        bed.receiveShadow = true;
+        var n = Math.max(1, Math.round(len / 0.9)), nx = Math.cos(ang), nz = -Math.sin(ang);
         for (var k = 0; k < n; k++) {
           var t = (k + 0.5) / n;
-          var s = 0.8 + rnd() * 0.5;
-          stones.push({ x: ax + (bx - ax) * t + (rnd() - 0.5) * 0.35, y: GY + 0.06, z: az + (bz - az) * t + (rnd() - 0.5) * 0.35, ry: rnd() * 3, sx: s, sz: s, c: rnd() < 0.5 ? '#D9D2C0' : '#CFC7B2' });
+          for (var side = -1; side <= 1; side += 2) {
+            var off = side * (0.42 + rnd() * 0.12);
+            var s2 = 0.78 + rnd() * 0.32;
+            stones.push({ x: ax + (bx - ax) * t + nx * off + (rnd() - 0.5) * 0.2, y: GY + 0.07, z: az + (bz - az) * t + nz * off + (rnd() - 0.5) * 0.2, ry: rnd() * 3, sx: s2, sy: 1, sz: s2 * (0.85 + rnd() * 0.3), c: tileCols[Math.floor(rnd() * tileCols.length)] });
+          }
         }
       }
     });
     var stoneMat = new T.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1 });
-    inst(new T.CylinderGeometry(0.42, 0.46, 0.12, 7), stoneMat, stones, false);
+    inst(new T.CylinderGeometry(0.5, 0.54, 0.12, 7), stoneMat, stones, false);
 
     ctx.nearPath = function (x, z, d) {
       for (var p = 0; p < paths.length; p++) {

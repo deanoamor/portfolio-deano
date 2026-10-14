@@ -2,7 +2,7 @@
   var parts = (window.HeroParts = window.HeroParts || {});
 
   parts.scatter = function (ctx) {
-    var T = ctx.T, C = ctx.C, root = ctx.root, rnd = ctx.rnd, mesh = ctx.mesh, cyl = ctx.cyl, matF = ctx.matF, glow = ctx.glow,
+    var T = ctx.T, C = ctx.C, root = ctx.root, rnd = ctx.rnd, mesh = ctx.mesh, cyl = ctx.cyl, sph = ctx.sph, matF = ctx.matF, glow = ctx.glow,
       GY = ctx.GY, safe = ctx.safe, circ = ctx.circ, inst = ctx.inst, gIco = ctx.gIco, islandR = ctx.islandR,
       H = ctx.home, pois = ctx.pois, circles = ctx.obstacleCircles, rects = ctx.obstacleRects, dock = ctx.dock;
 
@@ -36,17 +36,19 @@
     // ---------- forest around the edge ----------
     safe('forest', function () {
       var placed = 0, tries = 0;
-      while (placed < 150 && tries++ < 6000) {
+      while (placed < 64 && tries++ < 6000) {
         var th = rnd() * Math.PI * 2;
         var r = islandR(th) - 2.4 - rnd() * 26;
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okTree(x, z)) continue;
         var k = rnd();
         var kind = k < 0.4 ? 0 : k < 0.7 ? 1 : k < 0.9 ? 2 : 3;
-        ctx.tree(x, GY, z, kind, (0.85 + rnd() * 0.45) * 1.4, true);
+        ctx.tree(x, GY, z, kind, (0.85 + rnd() * 0.45) * 1.25, true);
         placed++;
       }
     });
+
+    ctx.bakeForest();
 
     // ---------- rolling hills near the shore ----------
     safe('hills', function () {
@@ -80,6 +82,20 @@
         ctx.blobs.push([x, z, s * 0.95]);
         placed++;
       }
+    });
+
+    // ---------- tiny white and yellow daisies sprinkled over the grass ----------
+    safe('daisies', function () {
+      var list = [], tries = 0;
+      while (list.length < 2600 && tries++ < 9000) {
+        var th = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * islandR(th);
+        var x = Math.cos(th) * r, z = Math.sin(th) * r;
+        if (!okSmall(x, z, 0.2)) continue;
+        var yel = rnd() < 0.16, sz = 0.7 + rnd() * 0.7;
+        list.push({ x: x, y: GY + 0.045, z: z, rx: -Math.PI / 2, rz: rnd() * 3, sx: sz, sy: sz, sz: sz, c: yel ? '#F6D95E' : '#FBFAF2' });
+      }
+      var dm = inst(new T.CircleGeometry(0.11, 6), new T.MeshBasicMaterial({ color: 0xffffff, side: T.DoubleSide }), list, false);
+      dm.userData.role = 'daisies';
     });
 
     // ---------- grass tufts + bushes ----------
@@ -116,9 +132,11 @@
     safe('lanterns', function () {
       [[H.x + 7.4, H.z - 0.6], [H.x + 8.6, H.z + 2.4], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].forEach(function (p) {
         ctx.lanterns.push([p[0], p[1]]);
-        cyl(root, 0.05, 0.05, 1.7, C.ink, p[0], GY + 0.85, p[1], 0, 0, 0, 6);
-        mesh(root, new T.BoxGeometry(0.28, 0.32, 0.28), glow('#FFE2A0'), p[0], GY + 1.85, p[1], 0, 0, 0, false);
-        mesh(root, new T.ConeGeometry(0.28, 0.2, 4), matF(C.ink), p[0], GY + 2.1, p[1], 0, Math.PI / 4, 0);
+        cyl(root, 0.05, 0.07, 1.7, C.ink, p[0], GY + 0.85, p[1], 0, 0, 0, 6);
+        cyl(root, 0.14, 0.14, 0.08, C.ink, p[0], GY + 1.72, p[1], 0, 0, 0, 6);
+        mesh(root, new T.BoxGeometry(0.3, 0.36, 0.3), glow('#FFB847'), p[0], GY + 1.95, p[1], 0, 0, 0, false);
+        mesh(root, new T.ConeGeometry(0.3, 0.24, 4), matF(C.ink), p[0], GY + 2.25, p[1], 0, Math.PI / 4, 0);
+        sph(root, 0.06, C.ink, p[0], GY + 2.42, p[1]);
         circ(p[0], p[1], 0.2);
       });
     });

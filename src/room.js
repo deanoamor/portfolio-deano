@@ -659,8 +659,8 @@
         g.position.set(0, EAVE + RISE / 2, s * HALF / 2);
         g.rotation.x = s * ANG;
         roof.add(g);
-        rb(g, 24.2, 0.3, LEN + 0.5, '#E8896B', 0, 0.02, 0);
-        for (var i = 0; i < 20; i++) rb(g, 24.24, 0.07, 0.34, i % 2 ? '#D9775B' : '#EE9A7E', 0, 0.19, -LEN / 2 + 0.3 + i * (LEN - 0.3) / 19);
+        rb(g, 24.2, 0.3, LEN + 0.5, '#A83A2F', 0, 0.02, 0);
+        for (var i = 0; i < 20; i++) rb(g, 24.24, 0.07, 0.34, i % 2 ? '#8E2F26' : '#B84738', 0, 0.19, -LEN / 2 + 0.3 + i * (LEN - 0.3) / 19);
         rb(g, 23.8, 0.06, LEN, '#D8A46C', 0, -0.17, 0);
         for (var r = 0; r < 12; r++) rb(g, 0.15, 0.18, LEN, C.woodDark, -10.5 + r * 1.9, -0.26, 0);
       });
@@ -674,7 +674,7 @@
         m.receiveShadow = true;
         roof.add(m);
       });
-      rb(roof, 24.5, 0.3, 0.7, '#D9775B', 0, EAVE + RISE + 0.12, 0);
+      rb(roof, 24.5, 0.3, 0.7, '#7E2A22', 0, EAVE + RISE + 0.12, 0);
       [-7.5, -3.8, 0, 3.8, 7.5].forEach(function (x) { rb(roof, 0.3, 0.3, 14.6, C.woodDark, x, EAVE - 0.15, 0); });
       var cx = 6.5, cz = -3.8, cy = EAVE + RISE * (1 - Math.abs(cz) / HALF);
       rb(roof, 1.2, 3.6, 1.2, '#B9B2A2', cx, cy + 1.7, cz);

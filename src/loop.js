@@ -34,6 +34,7 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(view.w, view.h, false);
       fpsCam.aspect = view.w / view.h; fpsCam.updateProjectionMatrix();
+      if (ctx.post) ctx.post.resize();
     };
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
@@ -387,7 +388,7 @@
         if (ctx.env && ctx.env.haze) { fog.color.copy(ctx.env.haze); scene.background = scene.background || new T.Color(); scene.background.copy(ctx.env.haze); }
         cam = fpsCam;
       } else if (scene.background) scene.background = null;
-      renderer.render(scene, cam);
+      if (ctx.post) ctx.post.render(scene, cam); else renderer.render(scene, cam);
     };
     ctx.raf = requestAnimationFrame(tick);
 

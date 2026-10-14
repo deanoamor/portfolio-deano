@@ -68,6 +68,116 @@
       circ(bx - 1.8, bz + 0.2, 0.2);
     });
 
+
+
+    // ---------- river from the mountains to the sea (flowing texture, stone banks, blocks the way like water should) ----------
+    safe('river', function () {
+      var pts = [[-24, 2], [-22.5, 8], [-22.5, 14], [-20.5, 20], [-17, 26], [-13, 31], [-9, 38]];
+      var W = 3.4, len = [0];
+      for (var i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+      var N = pts.length, pos = new Float32Array(N * 6), uv = new Float32Array(N * 4), idx = [];
+      var norm = function (i) {
+        var a = pts[Math.max(0, i - 1)], b = pts[Math.min(N - 1, i + 1)];
+        var dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
+        return [-dz / l, dx / l];
+      };
+      pts.forEach(function (p2, i) {
+        var n = norm(i);
+        pos.set([p2[0] + n[0] * W / 2, GY + 0.04, p2[1] + n[1] * W / 2, p2[0] - n[0] * W / 2, GY + 0.04, p2[1] - n[1] * W / 2], i * 6);
+        uv.set([0, len[i] / 5, 1, len[i] / 5], i * 4);
+        if (i < N - 1) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+      });
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new T.BufferAttribute(uv, 2));
+      geo.setIndex(idx);
+      var rtex = tex(128, 256, function (g, w, h) {
+        g.fillStyle = '#35B1DE'; g.fillRect(0, 0, w, h);
+        g.fillStyle = '#4DC6EA';
+        for (var k = 0; k < 14; k++) { g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 14 + Math.random() * 22, 5 + Math.random() * 6, 0, 0, 7); g.fill(); }
+        g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 3; g.lineCap = 'round';
+        for (var q = 0; q < 12; q++) {
+          var x0 = 10 + Math.random() * (w - 20), y0 = Math.random() * h;
+          g.beginPath(); g.moveTo(x0, y0); g.bezierCurveTo(x0 + 14, y0 + 10, x0 - 14, y0 + 22, x0 + 6, y0 + 36); g.stroke();
+        }
+      });
+      rtex.wrapS = rtex.wrapT = T.RepeatWrapping;
+      var rm = new T.Mesh(geo, new T.MeshBasicMaterial({ map: rtex }));
+      rm.renderOrder = 1; rm.frustumCulled = false;
+      root.add(rm);
+      anim.push(function (t) { rtex.offset.y = -t * 0.35; });
+      ctx.river = pts;
+      // stone banks + obstacle circles so trees keep clear and you cannot walk on the water
+      var banks = [];
+      for (var s = 0; s < N - 1; s++) {
+        var segLen = len[s + 1] - len[s], steps = Math.max(1, Math.round(segLen / 1.5));
+        for (var k = 0; k < steps; k++) {
+          var t2 = k / steps, cx = pts[s][0] + (pts[s + 1][0] - pts[s][0]) * t2, cz = pts[s][1] + (pts[s + 1][1] - pts[s][1]) * t2;
+          var n2 = norm(s);
+          [-1, 1].forEach(function (sd) {
+            var sz = 0.5 + rnd() * 0.35;
+            banks.push({ x: cx + n2[0] * sd * (W / 2 + 0.2), y: GY + 0.1, z: cz + n2[1] * sd * (W / 2 + 0.2), ry: rnd() * 3, sx: sz * 1.4, sy: sz * 0.8, sz: sz, c: rnd() < 0.5 ? '#7B8791' : '#6A7681' });
+          });
+          circ(cx, cz, W / 2 + 0.35);
+        }
+      }
+      ctx.inst(ctx.gIco, new T.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1 }), banks, true);
+    });
+
+    // ---------- timber cottages with red tile roofs ----------
+    safe('cottages', function () {
+      var plaster = '#EBE1C9', timber = '#4A3426', tileA = '#A83A2F', tileB = '#8E2F26', stoneC = '#8F9AA2';
+      var cottage = function (x, z, ry, s) {
+        var g = new T.Group();
+        g.position.set(x, GY, z); g.rotation.y = ry; g.scale.setScalar(s);
+        root.add(g);
+        box(g, 4.7, 0.4, 3.7, stoneC, 0, 0.2, 0);                                    // stone footing
+        box(g, 4.2, 2.5, 3.2, plaster, 0, 1.65, 0);                                  // walls
+        [[-2.1, -1.6], [2.1, -1.6], [-2.1, 1.6], [2.1, 1.6]].forEach(function (c) { box(g, 0.22, 2.6, 0.22, timber, c[0], 1.7, c[1]); });
+        [0.55, 1.55, 2.85].forEach(function (y) {
+          box(g, 4.3, 0.15, 0.2, timber, 0, y, 1.62); box(g, 4.3, 0.15, 0.2, timber, 0, y, -1.62);
+          box(g, 0.2, 0.15, 3.3, timber, 2.12, y, 0); box(g, 0.2, 0.15, 3.3, timber, -2.12, y, 0);
+        });
+        [-1.0, 1.0].forEach(function (x2) { box(g, 0.14, 2.4, 0.2, timber, x2, 1.7, 1.62); });
+        box(g, 0.14, 1.5, 0.2, timber, -1.5, 2.05, 1.62, 0, 0, 0.7);
+        box(g, 0.14, 1.5, 0.2, timber, 1.5, 2.05, 1.62, 0, 0, -0.7);
+        // pitched roof
+        var rise = 1.9, half = 2.15, len = Math.hypot(half, rise), ang = Math.atan2(rise, half);
+        [-1, 1].forEach(function (sd) {
+          var rg = new T.Group();
+          rg.position.set(0, 2.9 + rise / 2, sd * half / 2); rg.rotation.x = sd * ang;
+          g.add(rg);
+          box(rg, 5.5, 0.2, len + 0.55, tileA, 0, 0.02, 0);
+          for (var i = 0; i < 7; i++) box(rg, 5.52, 0.07, 0.3, i % 2 ? tileB : '#B84738', 0, 0.13, -len / 2 + 0.3 + i * (len - 0.3) / 6);
+        });
+        var tri = new T.Shape();
+        tri.moveTo(-half, 0); tri.lineTo(half, 0); tri.lineTo(0, rise + 0.02); tri.closePath();
+        var gg = new T.ExtrudeGeometry(tri, { depth: 0.18, bevelEnabled: false });
+        gg.translate(0, 0, -0.09);
+        [-1, 1].forEach(function (sd) { var m = new T.Mesh(gg, mat(plaster)); m.rotation.y = sd * Math.PI / 2; m.position.set(sd * 2.1, 2.9, 0); m.castShadow = true; g.add(m); });
+        box(g, 5.6, 0.2, 0.5, tileB, 0, 2.9 + rise + 0.1, 0);
+        box(g, 0.7, 2.1, 0.7, stoneC, -1.4, 4.6, -0.7);                              // chimney
+        box(g, 0.95, 0.2, 0.95, '#6F7A82', -1.4, 5.7, -0.7);
+        // door, steps, windows
+        box(g, 1.0, 1.7, 0.16, '#5B3A29', 0.0, 1.25, 1.66);
+        box(g, 1.2, 0.14, 0.18, timber, 0, 2.15, 1.66);
+        sph(g, 0.06, '#E2B450', 0.32, 1.2, 1.78);
+        [0, 1, 2].forEach(function (i) { box(g, 1.5 - i * 0.1, 0.22, 0.5, '#9AA3A8', 0, 0.11 + i * 0.0, 2.15 + (2 - i) * 0.45 - 0.45 + 0.0); });
+        [-1.55, 1.55].forEach(function (wx) {
+          box(g, 0.8, 0.8, 0.12, '#7FA7B8', wx, 1.7, 1.66); box(g, 0.1, 0.8, 0.14, timber, wx, 1.7, 1.67); box(g, 0.8, 0.1, 0.14, timber, wx, 1.7, 1.67);
+          box(g, 0.34, 0.9, 0.08, '#6E8F5E', wx - 0.62, 1.7, 1.66); box(g, 0.34, 0.9, 0.08, '#6E8F5E', wx + 0.62, 1.7, 1.66);
+          box(g, 0.95, 0.12, 0.3, C.wood, wx, 1.22, 1.75);
+        });
+        ctx.bake(g);
+        circ(x, z, 2.3 * s);
+        circ(x + Math.sin(ry) * 0.9 * s, z + Math.cos(ry) * 0.9 * s, 2.3 * s);
+        ctx.blobs.push([x, z, 3.6 * s]);
+      };
+      cottage(19, 14, -0.65, 1.15);
+      cottage(-6, 23, 0.4, 1.1);
+      cottage(26, -9, 2.3, 1.1);
+    });
+
     // ---------- dock, boat, mailbox, lantern ----------
     safe('dock', function () {
       var d = ctx.dock;

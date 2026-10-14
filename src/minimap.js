@@ -46,11 +46,15 @@
       sg.beginPath(); sg.arc(size / 2, size / 2, 62 * sc, 0, 7); sg.fill();
       // islets
       [[-64, -22, 4.2], [62, -34, 3.6], [-56, 48, 4.8], [60, 46, 3.2]].forEach(function (p) {
-        sg.fillStyle = hex(fol.sand.color); sg.beginPath(); sg.arc(mx(p[0]), my(p[1]), (p[2] + 1) * sc, 0, 7); sg.fill();
+        sg.fillStyle = '#5E6A74'; sg.beginPath(); sg.arc(mx(p[0]), my(p[1]), (p[2] + 0.6) * sc, 0, 7); sg.fill();
         sg.fillStyle = hex(fol.grass.color); sg.beginPath(); sg.arc(mx(p[0]), my(p[1]), p[2] * sc, 0, 7); sg.fill();
       });
-      blob(sg, 1, 1.5); sg.fillStyle = hex(fol.sand.color); sg.fill();
+      blob(sg, 1, 0.5); sg.fillStyle = '#5E6A74'; sg.fill();
       blob(sg, 1, 0); sg.fillStyle = hex(fol.grass.color); sg.fill();
+      if (ctx.river) {
+        sg.strokeStyle = '#35B1DE'; sg.lineWidth = Math.max(2, 3.4 * sc); sg.lineJoin = 'round'; sg.lineCap = 'round';
+        sg.beginPath(); ctx.river.forEach(function (p, i) { if (i) sg.lineTo(mx(p[0]), my(p[1])); else sg.moveTo(mx(p[0]), my(p[1])); }); sg.stroke();
+      }
       // dock
       var d = ctx.dock;
       sg.strokeStyle = '#C98B52'; sg.lineWidth = Math.max(2, 1.6 * sc); sg.lineCap = 'butt';
