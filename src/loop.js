@@ -16,6 +16,7 @@
       lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(H.x, 0.1, H.z)
     };
     var keys = {};
+    var zoom = 1, zoomT = 1, ZMIN = 0.5, ZMAX = 2;   // mouse-wheel zoom (multiplies the view height)
     var view = { w: 1440, h: 900 };
     var roomTarget = new T.Vector3(H.x, 0.1, H.z);
 
@@ -29,7 +30,7 @@
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
       var hRoom = Math.max(9.2, 10.0 / aspect), hRoam = Math.max(6.8, 7.5 / aspect);
-      var halfH = lerp(hRoom, hRoam, e), halfW = halfH * aspect;
+      var halfH = lerp(hRoom, hRoam, e) * zoom, halfW = halfH * aspect;
       var off = 0;
       camera.left = -halfW - off; camera.right = halfW - off;
       camera.top = halfH; camera.bottom = -halfH;
@@ -186,6 +187,11 @@
       down = null;
     });
     canvas.addEventListener('pointercancel', end);
+    canvas.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      zoomT = clamp(zoomT * Math.exp(dy * 0.0012), ZMIN, ZMAX);
+    }, { passive: false });
     var keyMap = { ArrowUp: 'u', w: 'u', W: 'u', ArrowDown: 'd', s: 'd', S: 'd', ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
     canvas.addEventListener('keydown', function (e) {
       if (S0.mode !== 'roam') return;
@@ -254,6 +260,7 @@
       var e = smooth(S0.modeT);
       var desired = (S0.mode === 'roam' && P) ? new T.Vector3(P.x, P.y + 0.4, P.z) : roomTarget;
       S0.focus.lerp(desired, 1 - Math.exp(-dt * 4));
+      zoom += (zoomT - zoom) * Math.min(1, dt * 9);
       applyFrustum(e);
 
       var f = S0.focus;
