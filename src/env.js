@@ -194,8 +194,8 @@
       renderer.setClearColor(cur.water, 1);
       ctx.discs[0].material.color.copy(cur.d0); ctx.discs[1].material.color.copy(cur.d1); ctx.discs[2].material.color.copy(cur.d2);
       ctx.foamMat.opacity = cur.foam;
-      // the light direction is relative to the camera, so shadows read the same on screen while you rotate
-      sun.position.set(f.x + Math.sin(a + cur.az) * cur.d, cur.h, f.z + Math.cos(a + cur.az) * cur.d);
+      // the sun is fixed in the world (the default view looks along azimuth PI/4), so shadows never swing when the camera turns
+      sun.position.set(f.x + Math.sin(Math.PI / 4 + cur.az) * cur.d, cur.h, f.z + Math.cos(Math.PI / 4 + cur.az) * cur.d);
       sun.target.position.set(f.x, 0, f.z);
 
       fades.forEach(function (fd) {
