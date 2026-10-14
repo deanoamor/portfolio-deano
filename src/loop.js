@@ -261,6 +261,8 @@
       var desired = (S0.mode === 'roam' && P) ? new T.Vector3(P.x, P.y + 0.4, P.z) : roomTarget;
       S0.focus.lerp(desired, 1 - Math.exp(-dt * 4));
       zoom += (zoomT - zoom) * Math.min(1, dt * 9);
+      var shExt = 18 + 11 * zoom, shCam = sun.shadow.camera;
+      if (Math.abs(shExt - shCam.right) > 0.4) { shCam.left = -shExt; shCam.right = shExt; shCam.top = shExt; shCam.bottom = -shExt; shCam.updateProjectionMatrix(); }
       applyFrustum(e);
 
       var f = S0.focus;

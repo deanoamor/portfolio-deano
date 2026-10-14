@@ -77,6 +77,7 @@
         m.scale.set(s, s * 0.7, s);
         m.rotation.y = rnd() * 3;
         circ(x, z, s * 0.9);
+        ctx.blobs.push([x, z, s * 0.95]);
         placed++;
       }
     });
@@ -135,6 +136,7 @@
         var m = mesh(root, gIco, ctx.fol.bush[rnd() < 0.5 ? 0 : 1], x, GY + s * 0.5, z);
         m.scale.set(s, s * 0.8, s);
         circ(x, z, s * 0.8);
+        ctx.blobs.push([x, z, s * 1.15]);
         placed++;
       }
     });

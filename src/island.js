@@ -10,8 +10,22 @@
 
     // foliage / ground materials are unshared so the season switch can recolour them
     var mkF = function (c) { return new T.MeshStandardMaterial({ color: c, flatShading: true, roughness: 1, metalness: 0 }); };
+    // soft painterly mottling on the ground (tiles every ~26 units; multiplies the seasonal grass colour)
+    var grassTex = ctx.tex(256, 256, function (g, w, h) {
+      g.fillStyle = '#f2f2f0'; g.fillRect(0, 0, w, h);
+      for (var i = 0; i < 300; i++) {
+        var x = Math.random() * w, y = Math.random() * h, r = 8 + Math.random() * 30, light = Math.random() < 0.5;
+        for (var ox = -1; ox <= 1; ox++) for (var oy = -1; oy <= 1; oy++) {
+          var gr = g.createRadialGradient(x + ox * w, y + oy * h, 0, x + ox * w, y + oy * h, r);
+          gr.addColorStop(0, light ? 'rgba(255,255,255,0.7)' : 'rgba(150,170,150,0.32)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+          g.fillStyle = gr; g.fillRect(x + ox * w - r, y + oy * h - r, r * 2, r * 2);
+        }
+      }
+    });
+    grassTex.wrapS = grassTex.wrapT = T.RepeatWrapping;
+    grassTex.repeat.set(1 / 26, 1 / 26);
     var fol = ctx.fol = {
-      grass: mkF('#86CF8F'), sand: mkF('#EAD9A8'), hills: mkF('#7BC287'),
+      grass: (function () { var m = mkF('#86CF8F'); m.map = grassTex; return m; })(), sand: mkF('#EAD9A8'), hills: mkF('#7BC287'),
       pine: [mkF('#3E9368'), mkF('#4FA877')], round: [mkF('#6CC08F'), mkF('#5FB07A')],
       deep: [mkF('#3F8F6B'), mkF('#357F5E')], warm: [mkF('#F2A65A'), mkF('#E8896B')],
       cherry: [mkF('#F7B2C4'), mkF('#F29CB5'), mkF('#FAC6D2'), mkF('#F5A9BE')],
@@ -67,6 +81,7 @@
       }
       if (track) {
         circ(x, z, 0.5 * s);
+        ctx.blobs.push([x, z, 1.5 * s]);
       }
       return g;
     };

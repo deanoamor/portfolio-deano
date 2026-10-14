@@ -9,7 +9,7 @@
     // ---------- time of day ----------
     var TIMES = {
       morning: { sky: '#FFEBD6', ground: '#B8D4CE', hI: 0.62, sun: '#FFD2A0', sI: 0.58, az: 1.5, h: 9, d: 14, water: '#86CFCB', discs: ['#98D8D0', '#B2E2D5', '#CBEEDC'], night: 0, foam: 0.55 },
-      noon: { sky: '#FFFFFF', ground: '#A8C8C0', hI: 0.62, sun: '#FFF0D6', sI: 0.5, az: 0.6, h: 15, d: 9, water: '#7CCBC8', discs: ['#8ED4CF', '#A6DED5', '#BFE9DB'], night: 0, foam: 0.55 },
+      noon: { sky: '#FFF6E8', ground: '#A9C9B8', hI: 0.62, sun: '#FFE8C4', sI: 0.55, az: 0.6, h: 15, d: 9, water: '#7CCBC8', discs: ['#8ED4CF', '#A6DED5', '#BFE9DB'], night: 0, foam: 0.55 },
       evening: { sky: '#FFD2B2', ground: '#98ACB6', hI: 0.55, sun: '#FF9A62', sI: 0.64, az: -1.15, h: 7, d: 13, water: '#78AEB9', discs: ['#9BBDBF', '#BAC7BE', '#D8D1BB'], night: 0.25, foam: 0.5 },
       night: { sky: '#5A72B4', ground: '#1E2A44', hI: 0.4, sun: '#A8BCFF', sI: 0.4, az: 0.4, h: 14, d: 8, water: '#1C3A5E', discs: ['#23456C', '#2B5179', '#355E86'], night: 1, foam: 0.2 }
     };
@@ -239,7 +239,154 @@
       }
       haloMat.opacity = cur.night * 0.9;
       halos.visible = cur.night > 0.03;
+      extraUpdate(dt, f, t);
       first = false;
+    };
+
+    // ======================= extra polish =======================
+    var WY = ctx.WATER_Y, islandR = ctx.islandR, H = ctx.home;
+
+    // soft contact shadows under trees, bushes, rocks and buildings
+    (function () {
+      var list = ctx.blobs || [];
+      if (!list.length) return;
+      var tx = ctx.tex(64, 64, function (g) {
+        var gr = g.createRadialGradient(32, 32, 2, 32, 32, 32);
+        gr.addColorStop(0, 'rgba(16,44,40,0.55)'); gr.addColorStop(0.55, 'rgba(16,44,40,0.28)'); gr.addColorStop(1, 'rgba(16,44,40,0)');
+        g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      });
+      var m = new T.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      var geo = new T.PlaneGeometry(1, 1); geo.rotateX(-Math.PI / 2);
+      var im = new T.InstancedMesh(geo, m, list.length);
+      var m4 = new T.Matrix4(), q = new T.Quaternion(), p = new T.Vector3(), s = new T.Vector3();
+      list.forEach(function (b, i) {
+        p.set(b[0], GY + 0.07, b[1]); s.set(b[2] * 2.2, 1, b[2] * 2.2);
+        m4.compose(p, q, s); im.setMatrixAt(i, m4);
+      });
+      im.renderOrder = 1; im.frustumCulled = false;
+      root.add(im);
+    })();
+
+    // shoreline foam: two ribbons that breathe in and out around the island
+    var ribbons = [];
+    var makeRibbon = function (inner, outer, base, ph) {
+      var N = 180, pos = new Float32Array((N + 1) * 6), idx = [];
+      for (var i = 0; i <= N; i++) {
+        var th = i / N * Math.PI * 2, r = islandR(th), c = Math.cos(th), s = Math.sin(th);
+        pos.set([c * (r + inner), WY + 0.07, s * (r + inner), c * (r + outer), WY + 0.07, s * (r + outer)], i * 6);
+        if (i < N) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+      }
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+      geo.setIndex(idx);
+      var m = new T.Mesh(geo, new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: base, depthWrite: false, side: T.DoubleSide }));
+      m.frustumCulled = false;
+      scene.add(m);
+      ribbons.push({ m: m, base: base, ph: ph });
+    };
+    makeRibbon(1.45, 2.35, 0.5, 0);
+    makeRibbon(3.1, 3.55, 0.32, 2.1);
+
+    // twinkling highlights on the water
+    var sparkTex = ctx.tex(32, 32, function (g) {
+      var gr = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 32, 32);
+    });
+    var sparks = [0, 1, 2].map(function (gi) {
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(new Float32Array(60 * 3), 3));
+      var m = new T.PointsMaterial({ size: 5, map: sparkTex, transparent: true, opacity: 0, depthWrite: false, sizeAttenuation: false, blending: T.AdditiveBlending });
+      var pts = new T.Points(geo, m);
+      pts.frustumCulled = false;
+      scene.add(pts);
+      return { pts: pts, geo: geo, mat: m, ph: gi * 2.1, prev: -1, ready: false };
+    });
+    var rollSparks = function (o, f) {
+      var P = o.geo.attributes.position, n = 0, tries = 0;
+      while (n < 60 && tries++ < 600) {
+        var x = f.x + (Math.random() - 0.5) * 70, z = f.z + (Math.random() - 0.5) * 70;
+        if (Math.hypot(x, z) < islandR(Math.atan2(z, x)) + 3.5) continue;
+        P.setXYZ(n++, x, WY + 0.12, z);
+      }
+      for (; n < 60; n++) P.setXYZ(n, 0, -50, 0);
+      P.needsUpdate = true;
+    };
+
+    // drifting cloud shadows
+    var cloudTex = ctx.tex(256, 256, function (g, w, h) {
+      g.clearRect(0, 0, w, h);
+      for (var i = 0; i < 9; i++) {
+        var x = Math.random() * w, y = Math.random() * h, r = 28 + Math.random() * 40;
+        for (var ox = -1; ox <= 1; ox++) for (var oy = -1; oy <= 1; oy++) {
+          var gr = g.createRadialGradient(x + ox * w, y + oy * h, 0, x + ox * w, y + oy * h, r);
+          gr.addColorStop(0, 'rgba(10,40,45,0.9)'); gr.addColorStop(1, 'rgba(10,40,45,0)');
+          g.fillStyle = gr; g.fillRect(x + ox * w - r, y + oy * h - r, r * 2, r * 2);
+        }
+      }
+    });
+    cloudTex.wrapS = cloudTex.wrapT = T.RepeatWrapping;
+    var CLOUD = 150;
+    cloudTex.repeat.set(1, 1);
+    var cloud = new T.Mesh(new T.PlaneGeometry(CLOUD, CLOUD), new T.MeshBasicMaterial({ map: cloudTex, transparent: true, opacity: 0.2, depthWrite: false }));
+    cloud.rotation.x = -Math.PI / 2; cloud.renderOrder = 2; cloud.frustumCulled = false;
+    scene.add(cloud);
+
+    // birds: a few circle the house, a few cross the island
+    var birds = [];
+    var addBird = function (cx, cz, rad, y, sp, ph) {
+      var g = new T.Group(), white = new T.MeshLambertMaterial({ color: '#F4EFE2' });
+      var body = new T.Mesh(new T.BoxGeometry(0.5, 0.14, 0.2), white); g.add(body);
+      var head = new T.Mesh(new T.BoxGeometry(0.16, 0.14, 0.16), white); head.position.set(0.3, 0.02, 0); g.add(head);
+      var beak = new T.Mesh(new T.BoxGeometry(0.1, 0.05, 0.06), new T.MeshLambertMaterial({ color: '#F2A65A' })); beak.position.set(0.42, 0, 0); g.add(beak);
+      var wings = [-1, 1].map(function (s) {
+        var piv = new T.Group(); piv.position.set(0, 0.04, s * 0.08); g.add(piv);
+        var w = new T.Mesh(new T.BoxGeometry(0.3, 0.03, 0.55), white); w.position.z = s * 0.28; piv.add(w);
+        return piv;
+      });
+      g.scale.setScalar(1.0);
+      scene.add(g);
+      birds.push({ g: g, wings: wings, cx: cx, cz: cz, rad: rad, y: y, sp: sp, ph: ph });
+    };
+    for (var bi = 0; bi < 3; bi++) addBird(H.x, H.z, 10 + bi * 3.2, 8.5 + bi * 0.8, (bi % 2 ? -1 : 1) * (0.2 + bi * 0.03), bi * 1.7);
+    for (var bj = 0; bj < 4; bj++) addBird(0, 0, 26 + bj * 7, 13 + bj, (bj % 2 ? 1 : -1) * (0.07 + bj * 0.01), bj * 2.3 + 1);
+
+    // campfire glow
+    var fireMat = new T.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.2, depthWrite: false, blending: T.AdditiveBlending });
+    var fireGlow = new T.Mesh(new T.PlaneGeometry(11, 11), fireMat);
+    fireGlow.rotation.x = -Math.PI / 2; fireGlow.position.set(11.5, GY + 0.1, -9.4);
+    scene.add(fireGlow);
+
+    var extraUpdate = function (dt, f, t) {
+      var night = cur.night;
+      ribbons.forEach(function (r) {
+        var w = Math.sin(t * 0.8 + r.ph);
+        r.m.scale.set(1 + 0.014 * w, 1, 1 + 0.014 * w);
+        r.m.material.opacity = r.base * (0.55 + 0.45 * Math.sin(t * 0.8 + r.ph + 1.2)) * (1 - 0.45 * night);
+      });
+      sparks.forEach(function (o) {
+        var v = Math.sin(t * 1.1 + o.ph);
+        if (!o.ready || (o.prev > 0 && v <= 0)) { rollSparks(o, f); o.ready = true; }
+        o.prev = v;
+        o.mat.opacity = Math.max(0, v) * (night > 0.6 ? 0.55 : 0.85);
+        o.mat.size = night > 0.6 ? 6 : 5;
+      });
+      var a = ctx.state ? ctx.state.az : 0;
+      cloud.position.set(f.x, GY + 0.12, f.z);
+      var k = 1 / CLOUD;
+      cloudTex.offset.set((f.x - t * 1.1) * k, -(f.z - t * 0.6) * k);
+      cloud.material.opacity = 0.2 * (1 - night * 0.8) * (env.season === 'winter' ? 0.7 : 1);
+      var dayBird = night < 0.6;
+      birds.forEach(function (b) {
+        b.g.visible = dayBird;
+        if (!dayBird) return;
+        var ang = b.ph + t * b.sp;
+        b.g.position.set(b.cx + Math.cos(ang) * b.rad, b.y + Math.sin(t * 0.9 + b.ph) * 0.4, b.cz + Math.sin(ang) * b.rad);
+        b.g.rotation.y = b.sp > 0 ? -(ang + Math.PI / 2) : -(ang - Math.PI / 2);
+        var fl = Math.sin(t * 9 + b.ph * 3) * 0.7;
+        b.wings[0].rotation.x = -fl; b.wings[1].rotation.x = fl;
+      });
+      fireMat.opacity = (0.22 + 0.7 * night) * (0.9 + 0.1 * Math.sin(t * 11));
     };
 
     applyTime();

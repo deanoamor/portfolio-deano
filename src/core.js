@@ -30,9 +30,10 @@
     scene.add(hemi);
     var sun = new T.DirectionalLight(0xfff0d6, 0.5);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -16; sun.shadow.camera.right = 16;
-    sun.shadow.camera.top = 16; sun.shadow.camera.bottom = -16;
+    var coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    sun.shadow.mapSize.set(coarse ? 2048 : 4096, coarse ? 2048 : 4096);
+    sun.shadow.camera.left = -26; sun.shadow.camera.right = 26;
+    sun.shadow.camera.top = 26; sun.shadow.camera.bottom = -26;
     sun.shadow.camera.near = 1; sun.shadow.camera.far = 70;
     sun.shadow.bias = -0.0006;
     sun.shadow.normalBias = 0.03;
@@ -147,7 +148,7 @@
 
     Object.assign(ctx, {
       T: T, canvas: canvas, renderer: renderer, scene: scene, camera: camera, sun: sun, root: root,
-      shadowPlane: shadowPlane, hemi: hemi, discs: discs, waterBase: waterBase, foamMat: foamMat, lanterns: [], islandR: islandR, home: home, WATER_Y: WATER_Y, GY: -0.3,
+      shadowPlane: shadowPlane, hemi: hemi, discs: discs, waterBase: waterBase, foamMat: foamMat, lanterns: [], blobs: [], islandR: islandR, home: home, WATER_Y: WATER_Y, GY: -0.3,
       clamp: clamp, smooth: smooth, lerp: lerp, wrapPi: wrapPi, rnd: rnd, reduce: reduce, safe: safe, C: C,
       mat: mat, matF: matF, glow: glow, mesh: mesh, box: box, cyl: cyl, sph: sph, flat: flat, tex: tex, inst: inst,
       anim: anim, tall: [], pois: [], paths: [], obstacleCircles: [], obstacleRects: [], walls: [], anchors: {},

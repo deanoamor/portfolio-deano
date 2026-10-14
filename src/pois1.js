@@ -53,6 +53,7 @@
       cyl(root, 0.03, 0.03, 1.1, C.ink, tx, GY + 2.8, tz, 0, 0, 0, 6);
       box(root, 0.5, 0.28, 0.03, C.mustard, tx + 0.27, GY + 3.1, tz);
       circ(tx, tz, 1.8);
+      ctx.blobs.push([tx, tz, 2.9]);
     });
 
     // ---------- windmill ----------
@@ -80,6 +81,7 @@
       });
       anim.push(function (t, dt) { blades.rotation.z -= dt * 0.9; });
       circ(wx, wz, 3.0);
+      ctx.blobs.push([wx, wz, 3.8]);
     });
 
     // ---------- lighthouse ----------
@@ -113,6 +115,7 @@
       g.add(light);
       anim.push(function (t, dt) { pivot.rotation.y += dt * 1.2; light.intensity = (0.9 + Math.sin(t * 2) * 0.2) * (1 + 1.4 * (ctx.env ? ctx.env.night : 0)); });
       circ(lx, lz, 2.7);
+      ctx.blobs.push([lx, lz, 4.2]);
     });
 
     // ---------- cherry tree + bench + falling petals ----------
@@ -153,6 +156,7 @@
       groundPetals.userData.slots = ground.map(function (o) { return o.c === '#F9B8CA' ? 0 : 1; });
       ctx.bench(x0 + 3.2, z0 + 1.8, x0, z0);
       circ(x0, z0, 1.0);
+      ctx.blobs.push([x0, z0, 4.4]);
     });
 
     // ---------- koi pond ----------
