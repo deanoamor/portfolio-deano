@@ -35,15 +35,19 @@
           }
         }
       });
-      // scarecrow
+      // scarecrow (sized to the person: ~1.7 tall)
       var sx = 8.6, sz = 12.6;
-      cyl(root, 0.06, 0.06, 2.4, C.woodDark, sx, GY + 1.2, sz, 0, 0, 0, 6);
-      box(root, 1.6, 0.1, 0.1, C.woodDark, sx, GY + 1.7, sz);
-      box(root, 0.6, 0.8, 0.3, C.coral, sx, GY + 1.55, sz);
-      sph(root, 0.3, C.wood2, sx, GY + 2.25, sz);
-      cyl(root, 0.0, 0.42, 0.4, C.mustard, sx, GY + 2.65, sz, 0, 0, 0, 10);
-      cyl(root, 0.5, 0.5, 0.05, C.mustard, sx, GY + 2.46, sz, 0, 0, 0, 12);
-      circ(sx, sz, 0.5);
+      var sc = new T.Group();
+      sc.position.set(sx, GY, sz);
+      sc.scale.setScalar(0.65);
+      root.add(sc);
+      cyl(sc, 0.06, 0.06, 2.4, C.woodDark, 0, 1.2, 0, 0, 0, 0, 6);
+      box(sc, 1.6, 0.1, 0.1, C.woodDark, 0, 1.7, 0);
+      box(sc, 0.6, 0.8, 0.3, C.coral, 0, 1.55, 0);
+      sph(sc, 0.3, C.wood2, 0, 2.25, 0);
+      cyl(sc, 0.0, 0.42, 0.4, C.mustard, 0, 2.65, 0, 0, 0, 0, 10);
+      cyl(sc, 0.5, 0.5, 0.05, C.mustard, 0, 2.46, 0, 0, 0, 0, 12);
+      circ(sx, sz, 0.4);
     });
 
     // ---------- picnic spot ----------
@@ -104,6 +108,7 @@
         for (var i = 0; i < 8; i++) { g.fillStyle = cols[i % 4]; g.fillRect(i * w / 8, 0, w / 8 + 1, h); }
       });
       var g = new T.Group();
+      g.scale.setScalar(1.3);
       root.add(g);
       var env = new T.Mesh(new T.SphereGeometry(2.4, 20, 14), new T.MeshLambertMaterial({ map: bt }));
       env.scale.set(1, 1.2, 1);
@@ -114,7 +119,7 @@
       [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].forEach(function (p) { cyl(g, 0.02, 0.02, 1.8, C.ink, p[0], 1.4, p[1], 0, 0, 0, 4); });
       anim.push(function (t) {
         var ang = 0.6 + t * 0.025;
-        g.position.set(Math.cos(ang) * 27, 11 + Math.sin(t * 0.6) * 0.4, Math.sin(ang) * 27);
+        g.position.set(Math.cos(ang) * 46, 15 + Math.sin(t * 0.6) * 0.5, Math.sin(ang) * 46);
         g.rotation.y = t * 0.1;
       });
     });

@@ -61,6 +61,7 @@
       var g = new T.Group();
       g.position.set(wx, GY, wz);
       g.rotation.y = Math.PI / 2;
+      g.scale.setScalar(1.5);
       root.add(g);
       mesh(g, new T.CylinderGeometry(1.2, 1.8, 4.4, 8), matF(C.cream), 0, 2.2, 0);
       mesh(g, new T.ConeGeometry(1.7, 1.7, 8), matF(C.coral), 0, 5.25, 0);
@@ -78,8 +79,8 @@
         box(arm, 0.8, 2.4, 0.04, C.cream, 0.45, 2.0, 0.25);
       });
       anim.push(function (t, dt) { blades.rotation.z -= dt * 0.9; });
-      circ(wx, wz, 2.0);
-      tall.push({ g: g, x: wx, z: wz, rad: 2.0, base: 1 });
+      circ(wx, wz, 3.0);
+      tall.push({ g: g, x: wx, z: wz, rad: 3.0, base: 1.5 });
     });
 
     // ---------- lighthouse ----------
@@ -87,6 +88,7 @@
       var lx = -15.5, lz = 7.5;
       var g = new T.Group();
       g.position.set(lx, GY, lz);
+      g.scale.setScalar(1.3);
       root.add(g);
       [[0, 0, 0, 2.4, 1.0], [1.7, 0.1, 0.4, 1.7, 0.7], [-1.6, 0.1, 0.3, 1.5, 0.6], [0.4, 0.1, -1.7, 1.6, 0.6], [-0.9, 0.1, 1.8, 1.3, 0.5]].forEach(function (r) {
         var m = mesh(g, gIco, matF(C.rock), r[0], r[1], r[2]);
@@ -111,8 +113,8 @@
       light.position.set(0, 8.4, 0);
       g.add(light);
       anim.push(function (t, dt) { pivot.rotation.y += dt * 1.2; light.intensity = 0.9 + Math.sin(t * 2) * 0.2; });
-      circ(lx, lz, 2.1);
-      tall.push({ g: g, x: lx, z: lz, rad: 2.3, base: 1 });
+      circ(lx, lz, 2.7);
+      tall.push({ g: g, x: lx, z: lz, rad: 3.0, base: 1.3 });
     });
 
     // ---------- cherry tree + bench + falling petals ----------
@@ -120,6 +122,7 @@
       var x0 = -10.5, z0 = -1.5;
       var g = new T.Group();
       g.position.set(x0, GY, z0);
+      g.scale.setScalar(1.3);
       root.add(g);
       cyl(g, 0.35, 0.6, 2.4, '#7a5238', 0, 1.2, 0, 0, 0, 0, 8);
       var pc = ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'];
@@ -137,7 +140,7 @@
       anim.push(function (t) {
         petals.forEach(function (p) {
           var f = (t * 0.16 + p.ph) % 1;
-          p.m.position.set(x0 + p.ax * (1 + f * 0.8) + Math.sin(t + p.ph * 6) * 0.4, GY + 5 - f * 5.2, z0 + p.az * (1 + f * 0.8));
+          p.m.position.set(x0 + p.ax * (1 + f * 0.8) + Math.sin(t + p.ph * 6) * 0.4, GY + 6.5 - f * 6.8, z0 + p.az * (1 + f * 0.8));
           p.m.rotation.set(t * 2 + p.ph * 6, t * 1.5 + p.ph * 4, 0);
         });
       });
@@ -148,8 +151,8 @@
       }
       inst(new T.CircleGeometry(0.14, 5), new T.MeshBasicMaterial({ color: 0xffffff, side: T.DoubleSide }), ground, false);
       ctx.bench(x0 + 3.2, z0 + 1.8, x0, z0);
-      circ(x0, z0, 0.8);
-      tall.push({ g: g, x: x0, z: z0, rad: 2.6, base: 1 });
+      circ(x0, z0, 1.0);
+      tall.push({ g: g, x: x0, z: z0, rad: 3.4, base: 1.3 });
     });
 
     // ---------- koi pond ----------

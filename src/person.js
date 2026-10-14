@@ -63,7 +63,7 @@
         return;
       }
       P.amp += ((moving ? 1 : 0) - P.amp) * Math.min(1, dt * 10);
-      if (moving) P.phase += dt * 9;
+      if (moving) P.phase += dt * 11;
       var s = Math.sin(P.phase) * P.amp;
       legs[0].hip.rotation.x = s * 0.8;
       legs[1].hip.rotation.x = -s * 0.8;
@@ -90,12 +90,15 @@
     P.stand = function () {
       if (g.parent) g.parent.remove(g);
       root.add(g);
-      g.scale.setScalar(1);
-      P.x = -1.8; P.z = -2.6; P.y = 0.05; P.amp = 0; P.phase = 0;
+      var H = ctx.home;
+      var w = function (x, z) { return [H.x + x * H.s, H.z + z * H.s]; };
+      g.scale.setScalar(H.s);
+      var st = w(-1.8, -2.6);
+      P.x = st[0]; P.z = st[1]; P.y = 0.05 * H.s; P.amp = 0; P.phase = 0;
       P.heading = 0.9;
       P.mode = 'walk';
       P.dest = null;
-      P.path = [[-1.0, -1.0], [2.0, -3.0], [3.2, -4.0], [5.3, -4.0], [7.0, -4.0]];
+      P.path = [w(-1.0, -1.0), w(2.0, -3.0), w(3.2, -4.0), w(5.3, -4.0), w(7.6, -4.0)];
       g.position.set(P.x, P.y, P.z);
       g.rotation.set(0, P.heading, 0);
     };

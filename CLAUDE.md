@@ -14,6 +14,10 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 - Palette: water #7CCBC8, text #0E3B38, cream #F4EFE2, coral #E8896B, teal #7FBDB8, sage #C9D5C3, ink #223433, mustard #F2C14E. Fonts: Fredoka (headings), DM Sans (body).
 - POIs (in `island.js`): Campfire, Windmill, Lighthouse, Cherry tree, Koi pond, Garden, Picnic, Dock, Home.
 
+## Scale
+- Person = 1.5 units tall. The house (room.js, built at full size in local coords) lives in a group scaled `ctx.home.s` (0.5) at `ctx.home.{x,z}`; collisions/person path are converted to world coords. Everything else is modelled at world scale.
+- Island is wide (R≈27) with a bay cut in the north (`islandR` in core.js); the house sits on the north shore so the sea shows behind it. Island centre is the origin.
+
 ## Status / TODO
 - Code was written blind in the claude.ai canvas and NEVER visually verified — first step: open it, check console errors, fix bugs.
 - Placeholder intro text in `index.html` (`[YOUR ROLE · ONE-LINE INTRO …]`) — replace with content from the old Notion page (https://deanoamor-design.notion.site/Hello-Welcome-to-my-page-1a0179cc9fd880eb853bc075f9684e08; needs pasted text, it is JS-rendered).

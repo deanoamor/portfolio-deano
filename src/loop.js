@@ -5,19 +5,19 @@
   parts.loop = function (ctx) {
     var T = ctx.T, canvas = ctx.canvas, renderer = ctx.renderer, scene = ctx.scene, camera = ctx.camera, sun = ctx.sun, root = ctx.root;
     var clamp = ctx.clamp, smooth = ctx.smooth, lerp = ctx.lerp, wrapPi = ctx.wrapPi, reduce = ctx.reduce, GY = ctx.GY;
-    var walls = ctx.walls, tall = ctx.tall, anim = ctx.anim, pois = ctx.pois, P = ctx.person, islandR = ctx.islandR, dock = ctx.dock;
+    var walls = ctx.walls, tall = ctx.tall, anim = ctx.anim, pois = ctx.pois, P = ctx.person, islandR = ctx.islandR, dock = ctx.dock, H = ctx.home;
     var circles = ctx.obstacleCircles, rects = ctx.obstacleRects;
 
-    var AZ0 = Math.PI / 4, AZ_MIN = AZ0 - Math.PI / 2, AZ_MAX = AZ0 + Math.PI / 2, EL = 0.6, DIST = 50;
+    var AZ0 = Math.PI / 4, AZ_MIN = AZ0 - Math.PI / 2, AZ_MAX = AZ0 + Math.PI / 2, EL = 0.6, DIST = 70;
     var rootEl = canvas.parentElement;
     var labelEl = document.getElementById('poi-label');
     var S0 = {
       mode: 'room', modeT: 0, az: reduce ? AZ0 : AZ0 - 0.9, azTarget: AZ0, interacted: false, dragging: false,
-      lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(0, 0.2, 0)
+      lastX: 0, t: 0, intro: reduce ? 1 : 0, focus: new T.Vector3(H.x, 0.1, H.z)
     };
     var keys = {};
     var view = { w: 1440, h: 900 };
-    var roomTarget = new T.Vector3(0, 0.2, 0);
+    var roomTarget = new T.Vector3(H.x, 0.1, H.z);
 
     // ---------- view size ----------
     var resize = function () {
@@ -28,9 +28,9 @@
     };
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
-      var hRoom = Math.max(10.8, 11.8 / aspect), hRoam = Math.max(6.6, 7.4 / aspect);
+      var hRoom = Math.max(6.4, 7.0 / aspect), hRoam = Math.max(3.8, 4.2 / aspect);
       var halfH = lerp(hRoom, hRoam, e), halfW = halfH * aspect;
-      var off = (aspect > 1.3 ? halfW * 0.16 : 0) * (1 - e);
+      var off = 0;
       camera.left = -halfW - off; camera.right = halfW - off;
       camera.top = halfH; camera.bottom = -halfH;
       camera.updateProjectionMatrix();
@@ -40,7 +40,7 @@
     resize();
 
     // ---------- walking rules ----------
-    var R_P = 0.38;
+    var R_P = 0.2;
     var onDock = function (x, z) {
       var dx = x - dock.ox, dz = z - dock.oz;
       var lx = dx * Math.cos(dock.a) + dz * Math.sin(dock.a), lz = -dx * Math.sin(dock.a) + dz * Math.cos(dock.a);
@@ -58,15 +58,16 @@
       }
       return false;
     };
-    var groundY = function (x, z) {
-      if (onDock(x, z)) return -0.15;
+    var groundY = function (wx, wz) {
+      if (onDock(wx, wz)) return -0.15;
+      var x = (wx - H.x) / H.s, z = (wz - H.z) / H.s;   // house-local coordinates
       if (x > 4.9 && x < 7.2 && Math.abs(z + 4.0) < 1.0) {
         var u = clamp((x - 6.5) / 0.6, 0, 1);
-        return 0.04 * (1 - u) + GY * u;
+        return (0.04 * (1 - u)) * H.s + GY * u;
       }
       var d = Math.max(Math.abs(x), Math.abs(z)) - 5.45;
       var t = clamp(d / 0.9, 0, 1);
-      return 0.05 * (1 - t) + GY * t;
+      return 0.05 * H.s * (1 - t) + GY * t;
     };
 
     var marker = new T.Mesh(new T.RingGeometry(0.28, 0.4, 24), new T.MeshBasicMaterial({ color: '#E8896B', transparent: true, opacity: 0.9, depthWrite: false }));
@@ -83,7 +84,7 @@
         if (d < 0.12) { P.path.shift(); }
         else {
           mx = dx / d; mz = dz / d;
-          var sp = Math.min(3.2 * dt, d);
+          var sp = Math.min(2.4 * dt, d);
           P.x += mx * sp; P.z += mz * sp;
           moving = true;
         }
@@ -99,7 +100,7 @@
           if (ed < 0.15) P.dest = null; else { mx = ex / ed; mz = ez / ed; }
         }
         if (mx || mz) {
-          var step = 4.8 * dt, nx = P.x + mx * step, nz = P.z + mz * step;
+          var step = 3.4 * dt, nx = P.x + mx * step, nz = P.z + mz * step;
           if (!blocked(nx, nz)) { P.x = nx; P.z = nz; moving = true; }
           else if (!blocked(nx, P.z)) { P.x = nx; moving = true; }
           else if (!blocked(P.x, nz)) { P.z = nz; moving = true; }
@@ -234,7 +235,9 @@
       S0.t += dt;
       if (S0.intro < 1) S0.intro = Math.min(1, S0.intro + dt / 1.3);
       var p = S0.intro - 1;
-      root.scale.setScalar(Math.max(0.001, 1 + 2.70158 * p * p * p + 1.70158 * p * p));
+      var sc = Math.max(0.001, 1 + 2.70158 * p * p * p + 1.70158 * p * p);
+      root.scale.setScalar(sc);
+      root.position.set(H.x * (1 - sc), 0, H.z * (1 - sc));   // pop in around the house, not the island centre
 
       S0.az += (S0.azTarget - S0.az) * Math.min(1, dt * 7);
       var sway = (reduce || S0.interacted) ? 0 : Math.sin(S0.t * 0.5) * 0.05;
@@ -244,7 +247,7 @@
 
       S0.modeT = clamp(S0.modeT + (S0.mode === 'roam' ? 1 : -1) * dt / 1.2, 0, 1);
       var e = smooth(S0.modeT);
-      var desired = (S0.mode === 'roam' && P) ? new T.Vector3(P.x, P.y + 0.8, P.z) : roomTarget;
+      var desired = (S0.mode === 'roam' && P) ? new T.Vector3(P.x, P.y + 0.4, P.z) : roomTarget;
       S0.focus.lerp(desired, 1 - Math.exp(-dt * 4));
       applyFrustum(e);
 

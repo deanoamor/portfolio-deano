@@ -2,9 +2,17 @@
   var parts = (window.HeroParts = window.HeroParts || {});
 
   parts.room = function (ctx) {
-    var T = ctx.T, C = ctx.C, root = ctx.root, rnd = ctx.rnd, mat = ctx.mat, mesh = ctx.mesh, box = ctx.box, cyl = ctx.cyl,
+    var T = ctx.T, C = ctx.C, rnd = ctx.rnd, mat = ctx.mat, mesh = ctx.mesh, box = ctx.box, cyl = ctx.cyl,
       sph = ctx.sph, flat = ctx.flat, tex = ctx.tex, glow = ctx.glow, walls = ctx.walls, anchors = ctx.anchors, safe = ctx.safe,
-      circ = ctx.circ, rect = ctx.rect;
+      HM = ctx.home;
+    // everything below is modelled at full size in local coordinates, then scaled down as one house
+    var root = new T.Group();
+    root.position.set(HM.x, 0, HM.z);
+    root.scale.setScalar(HM.s);
+    ctx.root.add(root);
+    ctx.homeRoot = root;
+    var rect = function (x0, z0, x1, z1) { ctx.rect(HM.x + x0 * HM.s, HM.z + z0 * HM.s, HM.x + x1 * HM.s, HM.z + z1 * HM.s); };
+    var circ = function (x, z, r) { ctx.circ(HM.x + x * HM.s, HM.z + z * HM.s, r * HM.s); };
 
     // ---------- textures ----------
     var tScreen = tex(1024, 560, function (g, w, h) {
@@ -129,7 +137,7 @@
     ]);
     eWall.low.push(eWall.parts[2]);
     var addLight = function (id, parent, color, intensity, dist, x, y, z) {
-      var l = new T.PointLight(color, intensity, dist, 2);
+      var l = new T.PointLight(color, intensity, dist * HM.s, 2);
       l.position.set(x, y, z);
       parent.add(l);
       walls.filter(function (w) { return w.id === id; })[0].lights.push({ light: l, base: intensity });

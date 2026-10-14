@@ -50,13 +50,22 @@
     var waterBase = new T.Mesh(new T.PlaneGeometry(600, 600), new T.MeshBasicMaterial({ color: 0x7CCBC8 }));
     waterBase.rotation.x = -Math.PI / 2; waterBase.position.y = WATER_Y;
     scene.add(waterBase);
-    flatDisc(47, '#8ED4CF', WATER_Y + 0.01);
-    flatDisc(41, '#A6DED5', WATER_Y + 0.02);
-    flatDisc(36.5, '#BFE9DB', WATER_Y + 0.03);
+    flatDisc(60, '#8ED4CF', WATER_Y + 0.01);
+    flatDisc(52, '#A6DED5', WATER_Y + 0.02);
+    flatDisc(45, '#BFE9DB', WATER_Y + 0.03);
     var shadowPlane = new T.Mesh(new T.PlaneGeometry(90, 90), new T.ShadowMaterial({ opacity: 0.16 }));
     shadowPlane.rotation.x = -Math.PI / 2; shadowPlane.position.y = WATER_Y + 0.04;
     shadowPlane.receiveShadow = true;
     scene.add(shadowPlane);
+
+    // ---------- island outline (wide, with a bay cut in the north where the house sits) ----------
+    var islandR = function (th) {
+      var d = wrapPi(th + Math.PI / 2);
+      return 27 * (1 + 0.09 * Math.sin(2 * th + 0.7) + 0.06 * Math.sin(3 * th + 2.1) + 0.035 * Math.sin(5 * th + 0.3)) * (1 - 0.22 * Math.exp(-(d * d) / 0.55));
+    };
+    // The house is built at 1/2 scale next to the rest of the island (a person is 1.5 units tall)
+    var HOME_S = 0.5, HOME_TH = -Math.PI / 2;
+    var home = { s: HOME_S, x: 0, z: Math.sin(HOME_TH) * (islandR(HOME_TH) - 5.4) };
 
     var anim = [];
     var rings = [];
@@ -69,7 +78,7 @@
     var foamMat = new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false });
     var foam = [];
     for (var j = 0; j < 70; j++) {
-      var fa = rnd() * Math.PI * 2, fr = 33 + rnd() * 32;
+      var fa = rnd() * Math.PI * 2, fr = 42 + rnd() * 36;
       var fm = new T.Mesh(new T.PlaneGeometry(1.2, 0.17), foamMat);
       fm.rotation.set(-Math.PI / 2, 0, rnd() * 3);
       fm.position.set(Math.cos(fa) * fr, WATER_Y + 0.05, Math.sin(fa) * fr);
@@ -79,7 +88,7 @@
     anim.push(function (t) {
       rings.forEach(function (r) {
         var f = (t * 0.1 + r.ph) % 1;
-        r.m.scale.setScalar(24 + f * 10);
+        r.m.scale.setScalar(33 + f * 12);
         r.m.material.opacity = 0.45 * (1 - f);
       });
       foam.forEach(function (f) { f.m.scale.x = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * 0.9 + f.ph)); });
@@ -135,7 +144,7 @@
 
     Object.assign(ctx, {
       T: T, canvas: canvas, renderer: renderer, scene: scene, camera: camera, sun: sun, root: root,
-      shadowPlane: shadowPlane, WATER_Y: WATER_Y, GY: -0.3,
+      shadowPlane: shadowPlane, islandR: islandR, home: home, WATER_Y: WATER_Y, GY: -0.3,
       clamp: clamp, smooth: smooth, lerp: lerp, wrapPi: wrapPi, rnd: rnd, reduce: reduce, safe: safe, C: C,
       mat: mat, matF: matF, glow: glow, mesh: mesh, box: box, cyl: cyl, sph: sph, flat: flat, tex: tex, inst: inst,
       anim: anim, tall: [], pois: [], paths: [], obstacleCircles: [], obstacleRects: [], walls: [], anchors: {},

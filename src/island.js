@@ -6,10 +6,7 @@
       matF = ctx.matF, mat = ctx.mat, GY = ctx.GY, WATER_Y = ctx.WATER_Y, safe = ctx.safe, circ = ctx.circ, tall = ctx.tall,
       paths = ctx.paths, pois = ctx.pois, inst = ctx.inst, anim = ctx.anim;
 
-    var islandR = function (th) {
-      return 21 * (1 + 0.09 * Math.sin(2 * th + 0.7) + 0.06 * Math.sin(3 * th + 2.1) + 0.035 * Math.sin(5 * th + 0.3));
-    };
-    ctx.islandR = islandR;
+    var islandR = ctx.islandR, H = ctx.home;
 
     // ---------- the island body (organic outline, extruded, flat shaded) ----------
     var outline = function (scale, add) {
@@ -77,9 +74,9 @@
     };
 
     // islets with a tree and a rock
-    [[-38, -14, 4.2], [36, -22, 3.6], [-30, 28, 4.8], [33, 26, 3.2]].forEach(function (p, i) {
+    [[-50, -16, 4.2], [48, -26, 3.6], [-42, 36, 4.8], [46, 32, 3.2]].forEach(function (p, i) {
       blob(p[0], p[1], p[2]);
-      ctx.tree(p[0], GY, p[1], i % 2 ? 1 : 0, 0.8 + p[2] * 0.05, false);
+      ctx.tree(p[0], GY, p[1], i % 2 ? 1 : 0, (0.8 + p[2] * 0.05) * 1.4, false);
       var rk = mesh(root, gIco, matF(C.rock), p[0] + p[2] * 0.5, GY + 0.1, p[1] + p[2] * 0.3);
       rk.scale.set(0.5, 0.35, 0.5);
     });
@@ -98,7 +95,7 @@
       if (i % 2 === 0) mesh(root, new T.SphereGeometry(0.12, 8, 6), mat(C.pink), x + 0.1, WATER_Y + 0.17, z, 0, 0, 0, false);
     });
     var ducks = [];
-    [[31, 0.5, 0.05], [35, 3.4, -0.04]].forEach(function (d) {
+    [[38, 0.5, 0.04], [43, 3.4, -0.035]].forEach(function (d) {
       var g = new T.Group();
       root.add(g);
       sph(g, 0.3, C.cream, 0, 0.2, 0, 1.3, 0.8, 0.9);
@@ -128,17 +125,17 @@
     poi('Garden', 3.5, 12.8, 5.5, 5.5);
     poi('Picnic spot', -5.0, 12.8, 4.5, 4.0);
     poi('The dock', ctx.dock.ox + Math.cos(da) * 7, ctx.dock.oz + Math.sin(da) * 7, 5, 5);
-    poi('Home sweet home', 6.6, -4.0, 3, 2.5);
+    poi('Home sweet home', H.x + 2.6, H.z - 1.0, 3.2, 3.0);
 
     // ---------- stepping-stone paths ----------
     var P = function (pts) { paths.push(pts); };
-    P([[7.2, -4.0], [9, -4.2], [10.5, -4.4]]);
-    P([[10.5, -4.4], [11.8, -6.0], [11.6, -7.4]]);
-    P([[10.5, -4.4], [12.8, -1.8], [14.8, 1.5], [16.2, 5.0], [17.3, 8.0]]);
-    P([[14.8, 1.5], [13.0, 4.5], [11.6, 5.6]]);
-    P([[11.6, 5.6], [8.5, 5.2], [6.3, 8.0], [5.0, 10.2]]);
-    P([[7.2, -4.0], [7.4, -6.5], [5.0, -8.6], [0.5, -9.6], [-4.5, -9.8], [-9.0, -9.8], [-10.6, -9.7]]);
-    P([[-4.5, -9.8], [-7.2, -7.0], [-8.8, -3.8], [-8.6, -2.0]]);
+    var Ds = [H.x + 3.9, H.z - 2.0], hub = [3.5, -7.5];
+    P([Ds, [H.x + 5.4, H.z + 3.0], hub]);
+    P([hub, [7.5, -8.6], [10.4, -9.2]]);
+    P([hub, [-1.0, -8.8], [-6.0, -9.4], [-10.8, -9.7]]);
+    P([[-1.0, -8.8], [-5.0, -6.5], [-8.2, -3.8], [-8.6, -2.0]]);
+    P([hub, [9.0, -3.5], [14.0, 0.0], [18.5, 4.5], [23.0, 10.0]]);
+    P([[14.0, 0.0], [13.0, 4.5], [11.6, 5.6], [8.5, 5.2], [6.3, 8.0], [5.0, 10.2]]);
     P([[-8.8, -2.2], [-9.5, 1.5], [-11.5, 4.5], [-13.6, 6.9]]);
     P([[-9.5, 1.5], [-8.0, 5.5], [-6.5, 9.0], [-5.5, 11.0]]);
     var stones = [];
