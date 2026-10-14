@@ -34,7 +34,7 @@
       }
       anim.push(function (t) {
         fl.forEach(function (f, i) { f.scale.set(1, 0.85 + 0.25 * Math.sin(t * 9 + i * 2), 1); });
-        light.intensity = 1.2 + Math.sin(t * 11) * 0.15 + Math.sin(t * 17) * 0.1;
+        light.intensity = (1.2 + Math.sin(t * 11) * 0.15 + Math.sin(t * 17) * 0.1) * (1 + 1.6 * (ctx.env ? ctx.env.night : 0));
         smoke.forEach(function (p) {
           var f = (t * 0.25 + p.ph) % 1;
           p.m.position.set(Math.sin(t + p.ph * 5) * 0.2, 1.4 + f * 2.8, 0);
@@ -111,7 +111,7 @@
       var light = new T.PointLight(0xffe0a0, 1.0, 14, 2);
       light.position.set(0, 8.4, 0);
       g.add(light);
-      anim.push(function (t, dt) { pivot.rotation.y += dt * 1.2; light.intensity = 0.9 + Math.sin(t * 2) * 0.2; });
+      anim.push(function (t, dt) { pivot.rotation.y += dt * 1.2; light.intensity = (0.9 + Math.sin(t * 2) * 0.2) * (1 + 1.4 * (ctx.env ? ctx.env.night : 0)); });
       circ(lx, lz, 2.7);
     });
 
@@ -125,10 +125,11 @@
       cyl(g, 0.35, 0.6, 2.4, '#7a5238', 0, 1.2, 0, 0, 0, 0, 8);
       var pc = ['#F7B2C4', '#F29CB5', '#FAC6D2', '#F5A9BE'];
       [[0, 4.1, 0, 1.9], [1.5, 3.5, 0.6, 1.35], [-1.5, 3.6, -0.4, 1.4], [0.4, 3.6, -1.5, 1.3], [-0.5, 3.5, 1.5, 1.3], [0.2, 5.0, 0.2, 1.2]].forEach(function (b, i) {
-        var m = mesh(g, gIco, matF(pc[i % 4]), b[0], b[1], b[2]);
+        var m = mesh(g, gIco, ctx.fol.cherry[i % 4], b[0], b[1], b[2]);
         m.scale.setScalar(b[3]);
       });
       var petalMat = new T.MeshBasicMaterial({ color: '#F9B8CA', side: T.DoubleSide });
+      ctx.petalMat = petalMat;
       var petals = [];
       for (var i = 0; i < 28; i++) {
         var m = new T.Mesh(new T.PlaneGeometry(0.16, 0.12), petalMat);
@@ -147,7 +148,9 @@
         var a = rnd() * 6.28, r = 0.9 + rnd() * 3.2;
         ground.push({ x: x0 + Math.cos(a) * r, y: GY + 0.03, z: z0 + Math.sin(a) * r, rx: -Math.PI / 2, rz: rnd() * 3, c: rnd() < 0.5 ? '#F9B8CA' : '#FAC6D2' });
       }
-      inst(new T.CircleGeometry(0.14, 5), new T.MeshBasicMaterial({ color: 0xffffff, side: T.DoubleSide }), ground, false);
+      var groundPetals = inst(new T.CircleGeometry(0.14, 5), new T.MeshBasicMaterial({ color: 0xffffff, side: T.DoubleSide }), ground, false);
+      groundPetals.userData.role = 'petalsGround';
+      groundPetals.userData.slots = ground.map(function (o) { return o.c === '#F9B8CA' ? 0 : 1; });
       ctx.bench(x0 + 3.2, z0 + 1.8, x0, z0);
       circ(x0, z0, 1.0);
     });
@@ -161,6 +164,7 @@
       var inner = new T.Mesh(new T.CircleGeometry(pr * 0.55, 32), new T.MeshBasicMaterial({ color: '#9BDCE8' }));
       inner.rotation.x = -Math.PI / 2; inner.position.set(px, GY + 0.04, pz);
       root.add(inner);
+      ctx.pondMats = [water.material, inner.material];
       for (var i = 0; i < 13; i++) {
         var a = i / 13 * Math.PI * 2;
         var rk = mesh(root, gIco, matF(C.rock), px + Math.cos(a) * (pr + 0.1), GY + 0.1, pz + Math.sin(a) * (pr + 0.1));

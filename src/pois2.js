@@ -119,7 +119,7 @@
       [[-0.4, -0.4], [0.4, -0.4], [-0.4, 0.4], [0.4, 0.4]].forEach(function (p) { cyl(g, 0.02, 0.02, 1.8, C.ink, p[0], 1.4, p[1], 0, 0, 0, 4); });
       anim.push(function (t) {
         var ang = 0.6 + t * 0.025;
-        g.position.set(Math.cos(ang) * 46, 15 + Math.sin(t * 0.6) * 0.5, Math.sin(ang) * 46);
+        g.position.set(Math.cos(ang) * 58, 16 + Math.sin(t * 0.6) * 0.5, Math.sin(ang) * 58);
         g.rotation.y = t * 0.1;
       });
     });

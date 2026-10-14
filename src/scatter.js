@@ -36,9 +36,9 @@
     // ---------- forest around the edge ----------
     safe('forest', function () {
       var placed = 0, tries = 0;
-      while (placed < 78 && tries++ < 3000) {
+      while (placed < 150 && tries++ < 6000) {
         var th = rnd() * Math.PI * 2;
-        var r = islandR(th) - 2.4 - rnd() * 14;
+        var r = islandR(th) - 2.4 - rnd() * 26;
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okTree(x, z)) continue;
         var k = rnd();
@@ -51,13 +51,13 @@
     // ---------- rolling hills near the shore ----------
     safe('hills', function () {
       var placed = 0, tries = 0;
-      while (placed < 8 && tries++ < 600) {
+      while (placed < 12 && tries++ < 800) {
         var th = rnd() * Math.PI * 2;
         var r = islandR(th) - 5.5;
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okTree(x, z) || !free(x, z, 3)) continue;
         var s = 3.2 + rnd() * 1.8;
-        var m = mesh(root, gIco, matF('#7BC287'), x, GY + 0.2, z);
+        var m = mesh(root, gIco, ctx.fol.hills, x, GY + 0.2, z);
         m.scale.set(s, s * 0.45, s);
         circ(x, z, s * 0.8);
         placed++;
@@ -67,9 +67,9 @@
     // ---------- rocks ----------
     safe('rocks', function () {
       var placed = 0, tries = 0;
-      while (placed < 26 && tries++ < 900) {
+      while (placed < 48 && tries++ < 1500) {
         var th = rnd() * Math.PI * 2;
-        var r = islandR(th) - 1.8 - rnd() * 18;
+        var r = islandR(th) - 1.8 - rnd() * 34;
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okSmall(x, z, 0.8)) continue;
         var s = 0.35 + rnd() * 0.5;
@@ -84,11 +84,12 @@
     // ---------- wildflower meadows ----------
     safe('flowers', function () {
       var pal = [C.mustard, C.coral, C.cream, C.pink, '#B79CF2', '#FF9EB5'];
+      var pickSlot = function () { return Math.floor(rnd() * pal.length); };
       var clusters = [], tries = 0;
-      while (clusters.length < 28 && tries++ < 800) {
+      while (clusters.length < 56 && tries++ < 1600) {
         var th = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * islandR(th);
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
-        if (okSmall(x, z, 1.2)) clusters.push({ x: x, z: z, c1: pal[Math.floor(rnd() * pal.length)], c2: pal[Math.floor(rnd() * pal.length)] });
+        if (okSmall(x, z, 1.2)) clusters.push({ x: x, z: z, s1: pickSlot(), s2: pickSlot() });
       }
       var heads = [], stems = [];
       clusters.forEach(function (cl) {
@@ -98,33 +99,40 @@
           if (!okSmall(x, z, 0.3)) continue;
           var h = 0.22 + rnd() * 0.18;
           stems.push({ x: x, y: GY + h / 2, z: z, sy: h / 0.3 });
-          heads.push({ x: x, y: GY + h + 0.05, z: z, c: rnd() < 0.75 ? cl.c1 : cl.c2 });
+          var sl = rnd() < 0.75 ? cl.s1 : cl.s2;
+          heads.push({ x: x, y: GY + h + 0.05, z: z, c: pal[sl], slot: sl });
         }
       });
-      inst(new T.CylinderGeometry(0.02, 0.02, 0.3, 4), new T.MeshLambertMaterial({ color: '#4FA877' }), stems, false);
-      inst(new T.SphereGeometry(0.1, 8, 6), new T.MeshLambertMaterial({ color: 0xffffff }), heads, false);
+      var stemM = inst(new T.CylinderGeometry(0.02, 0.02, 0.3, 4), new T.MeshLambertMaterial({ color: '#4FA877' }), stems, false);
+      var headM = inst(new T.SphereGeometry(0.1, 8, 6), new T.MeshLambertMaterial({ color: 0xffffff }), heads, false);
+      stemM.userData.role = 'flowerStems';
+      headM.userData.role = 'flowerHeads';
+      headM.userData.slots = heads.map(function (o) { return o.slot; });
     });
 
     // ---------- grass tufts + bushes ----------
     safe('tufts', function () {
       var tufts = [], tries = 0;
-      while (tufts.length < 560 && tries++ < 4000) {
+      while (tufts.length < 1100 && tries++ < 8000) {
         var th = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * islandR(th);
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okSmall(x, z, 0.3)) continue;
         var s = 0.8 + rnd() * 0.8;
-        tufts.push({ x: x, y: GY + 0.17 * s, z: z, ry: rnd() * 3, sx: s, sy: s, sz: s, c: rnd() < 0.5 ? '#5FB07A' : '#4FA877' });
+        var ts = rnd() < 0.5 ? 0 : 1;
+        tufts.push({ x: x, y: GY + 0.17 * s, z: z, ry: rnd() * 3, sx: s, sy: s, sz: s, c: ts ? '#4FA877' : '#5FB07A', slot: ts });
       }
-      inst(new T.ConeGeometry(0.13, 0.34, 5), new T.MeshLambertMaterial({ color: 0xffffff }), tufts, false);
+      var tuftM = inst(new T.ConeGeometry(0.13, 0.34, 5), new T.MeshLambertMaterial({ color: 0xffffff }), tufts, false);
+      tuftM.userData.role = 'tufts';
+      tuftM.userData.slots = tufts.map(function (o) { return o.slot; });
     });
     safe('bushes', function () {
       var placed = 0, tries = 0;
-      while (placed < 44 && tries++ < 1500) {
+      while (placed < 80 && tries++ < 3000) {
         var th = rnd() * Math.PI * 2, r = Math.sqrt(rnd()) * islandR(th);
         var x = Math.cos(th) * r, z = Math.sin(th) * r;
         if (!okSmall(x, z, 1.0)) continue;
         var s = 0.5 + rnd() * 0.45;
-        var m = mesh(root, gIco, matF(rnd() < 0.5 ? '#5FB07A' : '#4FA877'), x, GY + s * 0.5, z);
+        var m = mesh(root, gIco, ctx.fol.bush[rnd() < 0.5 ? 0 : 1], x, GY + s * 0.5, z);
         m.scale.set(s, s * 0.8, s);
         circ(x, z, s * 0.8);
         placed++;
@@ -133,7 +141,8 @@
 
     // ---------- lantern posts along the main path ----------
     safe('lanterns', function () {
-      [[H.x + 4.6, H.z - 0.2], [H.x + 6.4, H.z + 3.6], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [19.4, 6.2], [-10.8, 0.4], [-12.4, 5.2]].forEach(function (p) {
+      [[H.x + 4.6, H.z - 0.2], [H.x + 6.4, H.z + 3.6], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].forEach(function (p) {
+        ctx.lanterns.push([p[0], p[1]]);
         cyl(root, 0.05, 0.05, 1.7, C.ink, p[0], GY + 0.85, p[1], 0, 0, 0, 6);
         mesh(root, new T.BoxGeometry(0.28, 0.32, 0.28), glow('#FFE2A0'), p[0], GY + 1.85, p[1], 0, 0, 0, false);
         mesh(root, new T.ConeGeometry(0.28, 0.2, 4), matF(C.ink), p[0], GY + 2.1, p[1], 0, Math.PI / 4, 0);

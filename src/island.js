@@ -8,6 +8,16 @@
 
     var islandR = ctx.islandR, H = ctx.home;
 
+    // foliage / ground materials are unshared so the season switch can recolour them
+    var mkF = function (c) { return new T.MeshStandardMaterial({ color: c, flatShading: true, roughness: 1, metalness: 0 }); };
+    var fol = ctx.fol = {
+      grass: mkF('#86CF8F'), sand: mkF('#EAD9A8'), hills: mkF('#7BC287'),
+      pine: [mkF('#3E9368'), mkF('#4FA877')], round: [mkF('#6CC08F'), mkF('#5FB07A')],
+      deep: [mkF('#3F8F6B'), mkF('#357F5E')], warm: [mkF('#F2A65A'), mkF('#E8896B')],
+      cherry: [mkF('#F7B2C4'), mkF('#F29CB5'), mkF('#FAC6D2'), mkF('#F5A9BE')],
+      bush: [mkF('#5FB07A'), mkF('#4FA877')]
+    };
+
     // ---------- the island body (organic outline, extruded, flat shaded) ----------
     var outline = function (scale, add) {
       var sh = new T.Shape();
@@ -22,23 +32,23 @@
       var geo = new T.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false, curveSegments: 1 });
       geo.rotateX(-Math.PI / 2);
       geo.translate(0, topY - depth, 0);
-      return mesh(root, geo, matF(color), 0, 0, 0);
+      return mesh(root, geo, typeof color === 'string' ? matF(color) : color, 0, 0, 0);
     };
-    layer(outline(1, 0), 0.4, GY, '#86CF8F');
-    layer(outline(1, 1.5), 0.7, -0.65, '#EAD9A8');
+    layer(outline(1, 0), 0.4, GY, fol.grass);
+    layer(outline(1, 1.5), 0.7, -0.65, fol.sand);
     layer(outline(0.86, 0), 2.0, -0.7, '#9A7451');
 
     // ---------- small islets far out in the lake ----------
     var blob = function (px, pz, r) {
-      mesh(root, new T.CylinderGeometry(r, r * 1.03, 0.4, 10), matF('#86CF8F'), px, -0.5, pz);
-      mesh(root, new T.CylinderGeometry(r * 1.12, r * 1.18, 0.7, 10), matF('#EAD9A8'), px, -1.0, pz);
+      mesh(root, new T.CylinderGeometry(r, r * 1.03, 0.4, 10), fol.grass, px, -0.5, pz);
+      mesh(root, new T.CylinderGeometry(r * 1.12, r * 1.18, 0.7, 10), fol.sand, px, -1.0, pz);
       mesh(root, new T.CylinderGeometry(r, r * 0.8, 2.0, 10), matF('#9A7451'), px, -1.65, pz);
     };
 
     // ---------- trees (shared geometry) ----------
     var gTrunk = new T.CylinderGeometry(0.15, 0.22, 1, 7), gCone = new T.ConeGeometry(1, 1, 7), gIco = new T.IcosahedronGeometry(1, 0);
     ctx.gIco = gIco;
-    var treeCols = [['#3E9368', '#4FA877'], ['#6CC08F', '#5FB07A'], ['#3F8F6B', '#357F5E'], ['#F2A65A', '#E8896B']];
+    var treeCols = [fol.pine, fol.round, fol.deep, fol.warm];
     ctx.tree = function (x, y, z, kind, s, track) {
       var g = new T.Group();
       g.position.set(x, y, z);
@@ -48,12 +58,12 @@
       var cols = treeCols[kind === 0 ? 0 : kind];
       if (kind === 0) {
         [[1.15, 1.5, 1.45], [0.9, 1.3, 2.1], [0.62, 1.1, 2.7]].forEach(function (c, i) {
-          var m = mesh(g, gCone, matF(cols[i % 2]), 0, c[2], 0);
+          var m = mesh(g, gCone, cols[i % 2], 0, c[2], 0);
           m.scale.set(c[0], c[1], c[0]);
         });
       } else {
-        var a = mesh(g, gIco, matF(cols[0]), 0, 1.9, 0); a.scale.setScalar(1.05);
-        var b = mesh(g, gIco, matF(cols[1]), 0.55, 1.35, 0.3); b.scale.setScalar(0.75);
+        var a = mesh(g, gIco, cols[0], 0, 1.9, 0); a.scale.setScalar(1.05);
+        var b = mesh(g, gIco, cols[1], 0.55, 1.35, 0.3); b.scale.setScalar(0.75);
       }
       if (track) {
         circ(x, z, 0.5 * s);
@@ -73,7 +83,7 @@
     };
 
     // islets with a tree and a rock
-    [[-50, -16, 4.2], [48, -26, 3.6], [-42, 36, 4.8], [46, 32, 3.2]].forEach(function (p, i) {
+    [[-64, -22, 4.2], [62, -34, 3.6], [-56, 48, 4.8], [60, 46, 3.2]].forEach(function (p, i) {
       blob(p[0], p[1], p[2]);
       ctx.tree(p[0], GY, p[1], i % 2 ? 1 : 0, (0.8 + p[2] * 0.05) * 1.4, false);
       var rk = mesh(root, gIco, matF(C.rock), p[0] + p[2] * 0.5, GY + 0.1, p[1] + p[2] * 0.3);
@@ -94,7 +104,7 @@
       if (i % 2 === 0) mesh(root, new T.SphereGeometry(0.12, 8, 6), mat(C.pink), x + 0.1, WATER_Y + 0.17, z, 0, 0, 0, false);
     });
     var ducks = [];
-    [[38, 0.5, 0.04], [43, 3.4, -0.035]].forEach(function (d) {
+    [[52, 0.5, 0.03], [58, 3.4, -0.027]].forEach(function (d) {
       var g = new T.Group();
       root.add(g);
       sph(g, 0.3, C.cream, 0, 0.2, 0, 1.3, 0.8, 0.9);
@@ -133,7 +143,8 @@
     P([hub, [7.5, -8.6], [10.4, -9.2]]);
     P([hub, [-1.0, -8.8], [-6.0, -9.4], [-10.8, -9.7]]);
     P([[-1.0, -8.8], [-5.0, -6.5], [-8.2, -3.8], [-8.6, -2.0]]);
-    P([hub, [9.0, -3.5], [14.0, 0.0], [18.5, 4.5], [23.0, 10.0]]);
+    var dk = [ctx.dock.ox - 1.0, ctx.dock.oz - 0.5];
+    P([hub, [9.0, -3.5], [14.0, 0.0], [dk[0] * 0.45 + 8, dk[1] * 0.45], dk]);
     P([[14.0, 0.0], [13.0, 4.5], [11.6, 5.6], [8.5, 5.2], [6.3, 8.0], [5.0, 10.2]]);
     P([[-8.8, -2.2], [-9.5, 1.5], [-11.5, 4.5], [-13.6, 6.9]]);
     P([[-9.5, 1.5], [-8.0, 5.5], [-6.5, 9.0], [-5.5, 11.0]]);

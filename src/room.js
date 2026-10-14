@@ -42,6 +42,15 @@
       g.fillStyle = '#9ACFA4'; g.beginPath(); g.ellipse(120, h, 260, 150, 0, 0, Math.PI * 2); g.fill();
       g.fillStyle = '#74B58A'; g.beginPath(); g.ellipse(400, h, 300, 110, 0, 0, Math.PI * 2); g.fill();
     });
+    var tWindowNight = tex(512, 448, function (g, w, h) {
+      g.fillStyle = '#16284A'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#F4EFE2'; g.beginPath(); g.arc(390, 110, 38, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#16284A'; g.beginPath(); g.arc(404, 102, 34, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#FFFFFF';
+      for (var i = 0; i < 26; i++) { g.fillRect((i * 97) % w, (i * 61) % 240, 3, 3); }
+      g.fillStyle = '#1F3C5C'; g.beginPath(); g.ellipse(120, h, 260, 150, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#18304E'; g.beginPath(); g.ellipse(400, h, 300, 110, 0, 0, Math.PI * 2); g.fill();
+    });
     var artA = tex(256, 320, function (g, w, h) {
       g.fillStyle = '#F4EFE2'; g.fillRect(0, 0, w, h);
       g.fillStyle = '#E8896B'; g.beginPath(); g.arc(128, 120, 60, 0, Math.PI * 2); g.fill();
@@ -216,7 +225,9 @@
     ctx.chair = chair;
     // window
     box(N, 2.6, 2.4, 0.14, C.cream, 3.0, 3.0, 0.07);
-    flat(N, 2.2, 2.0, new T.MeshBasicMaterial({ map: tWindow }), 3.0, 3.0, 0.15);
+    var winMat = new T.MeshBasicMaterial({ map: tWindow });
+    ctx.windowTex = { mat: winMat, day: tWindow, night: tWindowNight };
+    flat(N, 2.2, 2.0, winMat, 3.0, 3.0, 0.15);
     box(N, 0.08, 2.0, 0.06, C.cream, 3.0, 3.0, 0.17);
     box(N, 2.2, 0.08, 0.06, C.cream, 3.0, 3.0, 0.17);
     box(N, 0.55, 2.6, 0.12, C.coral, 1.5, 3.0, 0.28);

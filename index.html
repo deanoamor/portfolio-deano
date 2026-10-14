@@ -20,6 +20,13 @@ button{pointer-events:auto}
 .round:hover{transform:translateY(-2px)}
 .round:active{transform:translateY(3px);box-shadow:0 1px 0 #0E3B38}
 #poi-label{transition:opacity .25s}
+.seg{display:inline-flex;padding:3px;border-radius:999px;background:#F4EFE2;border:2px solid #0E3B38;box-shadow:0 3px 0 #0E3B38}
+.seg button{border:0;background:transparent;color:#0E3B38;font:600 14px/1 'DM Sans','Helvetica Neue',sans-serif;min-height:34px;padding:0 14px;border-radius:999px;cursor:pointer;transition:background .15s}
+.seg button:hover{background:#E6E0CD}
+.seg button[aria-pressed="true"]{background:#E8896B}
+.seg button:focus-visible{outline:2px solid #0E3B38;outline-offset:1px}
+#minimap{display:block;width:176px;height:176px;border-radius:18px;border:2px solid #0E3B38;box-shadow:0 4px 0 #0E3B38;background:#7CCBC8;cursor:pointer}
+@media (max-width:720px){#minimap{width:120px;height:120px}.seg button{padding:0 10px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -30,6 +37,27 @@ button{pointer-events:auto}
   <canvas id="hero-canvas" tabindex="0" role="img" aria-label="Interactive 3D isometric model of a cozy home office on a small island in a lake. Drag sideways, or use the rotate buttons, to turn the scene. Press the Explore the island button to walk around the island." style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; outline: none"></canvas>
 
   <!-- top bar -->
+  <!-- season + time of day -->
+  <div style="position: absolute; top: 24px; left: 24px; right: 224px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; pointer-events: none">
+    <div class="seg" id="seg-season" role="group" aria-label="Season" style="pointer-events: auto">
+      <button type="button" data-season="spring" aria-pressed="false">Spring</button>
+      <button type="button" data-season="summer" aria-pressed="true">Summer</button>
+      <button type="button" data-season="autumn" aria-pressed="false">Autumn</button>
+      <button type="button" data-season="winter" aria-pressed="false">Winter</button>
+    </div>
+    <div class="seg" id="seg-time" role="group" aria-label="Time of day" style="pointer-events: auto">
+      <button type="button" data-time="morning" aria-pressed="false">Morning</button>
+      <button type="button" data-time="noon" aria-pressed="true">Noon</button>
+      <button type="button" data-time="evening" aria-pressed="false">Evening</button>
+      <button type="button" data-time="night" aria-pressed="false">Night</button>
+    </div>
+  </div>
+
+  <!-- minimap -->
+  <div style="position: absolute; top: 24px; right: 24px; z-index: 2">
+    <canvas id="minimap" role="img" aria-label="Map of the island. In roam mode, click it to walk to that spot."></canvas>
+  </div>
+
   <!-- roam mode: back + help -->
   <div class="only-roam" style="position: absolute; left: 40px; bottom: 48px; z-index: 2; align-items: center; flex-wrap: wrap; gap: 16px">
     <button type="button" class="round" id="btn-exit" style="min-height: 52px; padding: 0 24px; border-radius: 999px; border: 2px solid #0E3B38; background: #F4EFE2; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; font-family: inherit; font-weight: 600; font-size: 16px; cursor: pointer">← Back to room</button>
@@ -60,15 +88,18 @@ button{pointer-events:auto}
 <script src="./src/core.js"></script>
 <script src="./src/room.js"></script>
 <script src="./src/island.js"></script>
+<script src="./src/mountains.js"></script>
 <script src="./src/pois1.js"></script>
 <script src="./src/pois2.js"></script>
 <script src="./src/scatter.js"></script>
 <script src="./src/person.js"></script>
+<script src="./src/env.js"></script>
 <script src="./src/loop.js"></script>
+<script src="./src/minimap.js"></script>
 <script>
 (function () {
   var ctx = { canvas: document.getElementById('hero-canvas') };
-  ['core','room','island','pois1','pois2','scatter','person','loop'].forEach(function (n) {
+  ['core','room','island','mountains','pois1','pois2','scatter','person','env','loop','minimap'].forEach(function (n) {
     try { window.HeroParts[n](ctx); } catch (e) { console.error('Island part "' + n + '" failed', e); }
   });
   var on = function (id, fn) { document.getElementById(id).addEventListener('click', fn); };
@@ -76,6 +107,18 @@ button{pointer-events:auto}
   on('btn-right', function () { ctx.api.rotateBy(-Math.PI / 4); });
   on('btn-enter', function () { ctx.api.enterRoam(); });
   on('btn-exit',  function () { ctx.api.exitRoam(); });
+  var pick = function (groupId, attr) {
+    var group = document.getElementById(groupId);
+    group.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b || !ctx.env) return;
+      var o = {}; o[attr] = b.getAttribute('data-' + attr);
+      ctx.env.set(o);
+      group.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    });
+  };
+  pick('seg-season', 'season');
+  pick('seg-time', 'time');
 })();
 </script>
 </body>

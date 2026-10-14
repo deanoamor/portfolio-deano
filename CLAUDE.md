@@ -5,7 +5,7 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 ## Structure
 - `index.html` — overlay UI (wordmark, nav, headline, buttons) + boot. Mode is `data-mode="room|roam"` on `#top`.
 - `src/*.js` — modules registered as `window.HeroParts[name] = function(ctx)`, run in order:
-  core → room → island → pois1 → pois2 → scatter → person → loop. Each is try/catch'd so one failure doesn't kill the scene. All share one `ctx` (THREE as `T`, renderer, scene, camera, helpers `mat/matF/glow/mesh/box/cyl/sph/inst/safe`, arrays `anim/pois/obstacleCircles/obstacleRects/walls`, `islandR`, `dock`, `chair`, `person`, `api`).
+  core → room → island → mountains → pois1 → pois2 → scatter → person → env → loop → minimap. Each is try/catch'd so one failure doesn't kill the scene. All share one `ctx` (THREE as `T`, renderer, scene, camera, helpers `mat/matF/glow/mesh/box/cyl/sph/inst/safe`, arrays `anim/pois/obstacleCircles/obstacleRects/walls`, `islandR`, `dock`, `chair`, `person`, `api`).
 - `ctx.api`: `rotateBy(rad)`, `enterRoam()`, `exitRoam()`.
 
 ## Design
@@ -16,7 +16,11 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 
 ## Scale
 - Person = 1.5 units tall. The house (room.js, built at full size in local coords) lives in a group scaled `ctx.home.s` (0.5) at `ctx.home.{x,z}`; collisions/person path are converted to world coords. Everything else is modelled at world scale.
-- Island is wide (R≈27) with a bay cut in the north (`islandR` in core.js); the house sits on the north shore so the sea shows behind it. Island centre is the origin.
+- Island is wide (R≈38) with a bay cut in the north (`islandR` in core.js); the house sits on the north shore so the sea shows behind it. Island centre is the origin.
+
+## Environment
+- `env.js`: `ctx.env.set({season, time})` (spring/summer/autumn/winter, morning/noon/evening/night). Foliage uses unshared materials in `ctx.fol` so seasons can recolour them; summer = original palette. Mountains (`mountains.js`) sit behind the house for every camera angle so they never hide it.
+- `minimap.js`: top-right canvas; click to walk in roam mode (`api.walkTo`).
 
 ## Status / TODO
 - Code was written blind in the claude.ai canvas and NEVER visually verified — first step: open it, check console errors, fix bugs.

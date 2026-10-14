@@ -142,7 +142,12 @@
       S0.azTarget = AZ0 + clamp(wrapPi(S0.azTarget - AZ0), -Math.PI / 2, Math.PI / 2);
       rootEl.setAttribute('data-mode', 'room');
     };
-    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam };
+    var walkTo = function (x, z) {
+      if (S0.mode !== 'roam' || !P || P.mode !== 'walk' || P.path.length) return;
+      if (!blocked(x, z)) P.dest = [x, z];
+    };
+    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo };
+    ctx.state = S0;
     rootEl.setAttribute('data-mode', 'room');
 
     // ---------- input ----------
@@ -206,7 +211,7 @@
         var s = smooth((w.f - 0.35) / 0.55);
         w.anchor.visible = s > 0.02;
         w.anchor.scale.setScalar(Math.max(s, 0.001));
-        w.lights.forEach(function (l) { l.light.intensity = l.base * s; });
+        w.lights.forEach(function (l) { l.light.intensity = l.base * s * (1 + 1.1 * (ctx.env ? ctx.env.night : 0)); });
         w.low.forEach(function (m) { m.visible = w.f > 0.5; });
       });
     };
@@ -254,8 +259,11 @@
       var f = S0.focus;
       camera.position.set(f.x + DIST * Math.cos(EL) * Math.sin(a), f.y + DIST * Math.sin(EL), f.z + DIST * Math.cos(EL) * Math.cos(a));
       camera.lookAt(f);
-      sun.position.set(f.x + Math.sin(a + 0.6) * 9, 15, f.z + Math.cos(a + 0.6) * 9);
-      sun.target.position.set(f.x, 0, f.z);
+      if (ctx.env) ctx.env.update(dt, f, a);
+      else {
+        sun.position.set(f.x + Math.sin(a + 0.6) * 9, 15, f.z + Math.cos(a + 0.6) * 9);
+        sun.target.position.set(f.x, 0, f.z);
+      }
       ctx.shadowPlane.position.x = f.x;
       ctx.shadowPlane.position.z = f.z;
       updateWalls(S0.az, dt);
