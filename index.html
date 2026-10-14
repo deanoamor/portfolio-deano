@@ -22,7 +22,6 @@ button{pointer-events:auto}
 .round:hover{transform:translateY(-2px)}
 .round:active{transform:translateY(3px);box-shadow:0 1px 0 #0E3B38}
 #poi-label{transition:opacity .25s}
-[data-pov="fps"] #seg-floor{display:none}
 [data-pov="fps"] #btn-left,[data-pov="fps"] #btn-right{display:none !important}
 .only-fps{display:none}
 [data-pov="fps"] .only-fps{display:inline}
@@ -64,10 +63,6 @@ button{pointer-events:auto}
       <button type="button" data-time="noon" aria-pressed="true">Noon</button>
       <button type="button" data-time="evening" aria-pressed="false">Evening</button>
       <button type="button" data-time="night" aria-pressed="false">Night</button>
-    </div>
-    <div class="seg" id="seg-floor" role="group" aria-label="Floor" style="pointer-events: auto">
-      <button type="button" data-floor="1" aria-pressed="true">Floor 1</button>
-      <button type="button" data-floor="2" aria-pressed="false">Floor 2</button>
     </div>
     <div class="seg" id="seg-pov" role="group" aria-label="Camera view" style="pointer-events: auto">
       <button type="button" data-pov="drone" aria-pressed="true">Drone view</button>
@@ -147,14 +142,6 @@ button{pointer-events:auto}
     povGroup.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-pov') === p ? 'true' : 'false'); });
   };
   ctx.onPov = syncPov;
-  var floorGroup = document.getElementById('seg-floor');
-  ctx.onFloor = function (n) {
-    floorGroup.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x.getAttribute('data-floor') === String(n) ? 'true' : 'false'); });
-  };
-  floorGroup.addEventListener('click', function (e) {
-    var b = e.target.closest('button');
-    if (b) ctx.api.setFloor(+b.getAttribute('data-floor'));
-  });
   povGroup.addEventListener('click', function (e) {
     var b = e.target.closest('button');
     if (b) ctx.api.setPov(b.getAttribute('data-pov'));

@@ -97,7 +97,6 @@
       if (!P) return;
       if (P.mode === 'sit') { P.lv = 0; P.pose(t, dt, false); return; }
       P.lv = P.y > 0.55 * HG.f2 * H.s ? 1 : 0;
-      if (P.lv !== S0.lvPrev) { S0.lvPrev = P.lv; setFloor(P.lv + 1); }
       var moving = false, mx = 0, mz = 0;
       if (P.path.length) {
         var w = P.path[0], dx = w[0] - P.x, dz = w[1] - P.z, d = Math.hypot(dx, dz);
@@ -143,11 +142,6 @@
     var rotateBy = function (d) {
       S0.interacted = true;
       S0.azTarget = S0.mode === 'room' ? clamp(S0.azTarget + d, AZ_MIN, AZ_MAX) : S0.azTarget + d;
-    };
-    var setFloor = function (n) {
-      n = n === 2 ? 2 : 1;
-      S0.floor = n;
-      if (ctx.onFloor) ctx.onFloor(n);
     };
     var fade = document.getElementById('cut');
     var setPov = function (pov, instant) {
@@ -199,7 +193,7 @@
       marker.visible = false;
       if (S0.pov === 'fps') setPov('drone', true);
       P.sit();
-      S0.lvPrev = 0; setFloor(1);
+      S0.lvPrev = 0;
       S0.az = AZ0 + wrapPi(S0.az - AZ0);
       S0.azTarget = AZ0 + clamp(wrapPi(S0.azTarget - AZ0), -Math.PI / 2, Math.PI / 2);
       rootEl.setAttribute('data-mode', 'room');
@@ -208,7 +202,7 @@
       if (S0.mode !== 'roam' || !P || P.mode !== 'walk' || P.path.length) return;
       if (!blocked(x, z)) P.dest = [x, z];
     };
-    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo, setPov: setPov, setFloor: setFloor };
+    ctx.api = { rotateBy: rotateBy, enterRoam: enterRoam, exitRoam: exitRoam, walkTo: walkTo, setPov: setPov };
     ctx.state = S0;
     rootEl.setAttribute('data-mode', 'room');
     rootEl.setAttribute('data-pov', 'drone');
@@ -358,6 +352,7 @@
       }
       ctx.shadowPlane.position.x = f.x;
       ctx.shadowPlane.position.z = f.z;
+      S0.floor = (S0.mode === 'roam' && P && P.lv) ? 2 : 1;   // the cutaway always shows the floor the character is on
       var showUp = S0.pov === 'fps' || S0.floor === 2;
       if (ctx.house && ctx.house.upper.visible !== showUp) ctx.house.upper.visible = showUp;
       updateWalls(S0.az, dt, S0.pov === 'fps', showUp ? 1 : 0);

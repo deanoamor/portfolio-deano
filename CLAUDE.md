@@ -25,7 +25,7 @@ Plain HTML + Three.js r149 (UMD, `vendor/three.min.js`). No build step. Run: `py
 
 ## House
 - Two storeys, built in `room.js` at full size and scaled by `ctx.home.s`: ground floor = living room + workstation (NE), kitchen (SE), bedroom (NW), bathroom (SW); upstairs = lounge. Footprint ±11 x ±7.5 local units (`ctx.houseGeo`). Walls are built from pieces with real door/window openings (`makeWall`); partitions are waist-high in the drone cutaway (`w.part`) and full height in first person.
-- Upstairs (`ctx.house.upper`) is shown by the Floor 1/2 buttons (`api.setFloor`), and always in first person. The stairs are a ramp (`groundY` in loop.js); obstacles carry a level (0 ground, 1 upstairs) and the player's level is `P.lv`.
+- Upstairs (`ctx.house.upper`) is shown only while the character is upstairs (`P.lv === 1`), and always in first person, so the floor you stand on is never covered. The stairs are a ramp (`groundY` in loop.js); obstacles carry a level (0 ground, 1 upstairs) and the player's level is `P.lv`.
 - Static furniture is merged per material with `bake()`; anything animated (cat, vinyl, steam, chair) is flagged `userData.noMerge`.
 
 ## Environment
