@@ -62,6 +62,16 @@
         head.rotation.x = 0.12;
         return;
       }
+      if (P.standK < 1) {   // rising from the chair: unfold the legs and arms
+        P.standK = Math.min(1, P.standK + dt / 0.95);
+        var k = P.standK * P.standK * (3 - 2 * P.standK);
+        legs[0].hip.rotation.x = legs[1].hip.rotation.x = -Math.PI / 2 * (1 - k);
+        legs[0].knee.rotation.x = legs[1].knee.rotation.x = Math.PI / 2 * (1 - k);
+        arms[0].rotation.x = arms[1].rotation.x = -1.05 * (1 - k);
+        head.rotation.x = 0.12 * (1 - k);
+        body.position.y = 0;
+        return;
+      }
       P.amp += ((moving ? 1 : 0) - P.amp) * Math.min(1, dt * 10);
       if (moving) P.phase += dt * 11;
       var s = Math.sin(P.phase) * P.amp;
@@ -83,6 +93,7 @@
       g.rotation.set(0, Math.PI, 0);
       g.scale.setScalar(1);
       P.mode = 'sit';
+      P.standK = 1;
       P.path = [];
       P.dest = null;
     };
@@ -93,12 +104,13 @@
       var H = ctx.home;
       var w = function (x, z) { return [H.x + x * H.s, H.z + z * H.s]; };
       g.scale.setScalar(H.s);
-      var st = w(4.2, -3.7);
+      var st = w(4.234, -4.806);          // exactly where the person was sitting
       P.x = st[0]; P.z = st[1]; P.y = 0.05 * H.s; P.amp = 0; P.phase = 0;
-      P.heading = 1.2;
+      P.heading = Math.PI + 0.35;         // still facing the desk
+      P.standK = 0;
       P.mode = 'walk';
       P.dest = null;
-      P.path = [w(6.4, -3.9), w(9.4, -4.0), w(11.4, -4.0), w(13.8, -4.0)];
+      P.path = [w(4.9, -3.7), w(6.6, -3.9), w(9.4, -4.0), w(11.4, -4.0), w(13.8, -4.0)];
       g.position.set(P.x, P.y, P.z);
       g.rotation.set(0, P.heading, 0);
     };

@@ -249,6 +249,25 @@
     var stoneMat = new T.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 1 });
     inst(new T.CylinderGeometry(0.5, 0.54, 0.12, 7), stoneMat, stones, false);
 
+    // nudge a point sideways until it is at least d from every path
+    ctx.pushOffPath = function (x, z, d) {
+      for (var iter = 0; iter < 5; iter++) {
+        var best = 1e9, bx = 0, bz = 0;
+        paths.forEach(function (pl) {
+          for (var i = 0; i < pl.length - 1; i++) {
+            var ax = pl[i][0], az = pl[i][1], vx = pl[i + 1][0] - ax, vz = pl[i + 1][1] - az, l2 = vx * vx + vz * vz;
+            var u = l2 ? Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / l2)) : 0;
+            var qx = ax + vx * u, qz = az + vz * u, dd = Math.hypot(x - qx, z - qz);
+            if (dd < best) { best = dd; bx = qx; bz = qz; }
+          }
+        });
+        if (best >= d) break;
+        var dx = x - bx, dz = z - bz, l = Math.hypot(dx, dz);
+        if (l < 0.001) { dx = 1; dz = 0; l = 1; }
+        x = bx + dx / l * d; z = bz + dz / l * d;
+      }
+      return [x, z];
+    };
     ctx.nearPath = function (x, z, d) {
       for (var p = 0; p < paths.length; p++) {
         var pl = paths[p];

@@ -130,7 +130,7 @@
 
     // ---------- lantern posts along the main path ----------
     safe('lanterns', function () {
-      [[H.x + 7.4, H.z - 0.6], [H.x + 8.6, H.z + 2.4], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].forEach(function (p) {
+      [[H.x + 7.4, H.z - 0.6], [H.x + 8.6, H.z + 2.4], [6.5, -9.8], [-3.5, -10.0], [-8.0, -7.2], [10.8, -4.6], [15.2, -1.2], [-10.8, 0.4], [-12.4, 5.2], [dock.ox * 0.45 + 9, dock.oz * 0.45 + 1.2], [dock.ox - 2.2, dock.oz - 1.6]].map(function (q) { return ctx.pushOffPath(q[0], q[1], 2.3); }).forEach(function (p) {
         ctx.lanterns.push([p[0], p[1]]);
         cyl(root, 0.05, 0.07, 1.7, C.ink, p[0], GY + 0.85, p[1], 0, 0, 0, 6);
         cyl(root, 0.14, 0.14, 0.08, C.ink, p[0], GY + 1.72, p[1], 0, 0, 0, 6);

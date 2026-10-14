@@ -97,6 +97,12 @@
       if (!P) return;
       if (P.mode === 'sit') { P.lv = 0; P.pose(t, dt, false); return; }
       P.lv = P.y > 0.55 * HG.f2 * H.s ? 1 : 0;
+      if (P.standK < 1) {   // getting up from the chair: stay put until the stand-up animation finishes
+        P.pose(t, dt, false);
+        P.g.position.set(P.x, P.y - 0.33 * H.s * (1 - smooth(P.standK)), P.z);
+        P.g.rotation.y = P.heading;
+        return;
+      }
       var moving = false, mx = 0, mz = 0;
       if (P.path.length) {
         var w = P.path[0], dx = w[0] - P.x, dz = w[1] - P.z, d = Math.hypot(dx, dz);
@@ -152,7 +158,7 @@
           var wasRoam = S0.mode === 'roam';
           if (!wasRoam) enterRoam();
           if (!P) return;
-          P.path = []; P.dest = null; marker.visible = false;
+          P.path = []; P.dest = null; marker.visible = false; P.standK = 1;
           if (wasRoam) S0.yaw = P.heading + Math.PI;
           else {   // just left the desk: start inside the house, facing the door
             P.x = H.x + 8 * H.s; P.z = H.z - 1.8 * H.s; P.y = 0.05 * H.s;
