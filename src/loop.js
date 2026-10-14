@@ -28,7 +28,7 @@
     };
     var applyFrustum = function (e) {
       var aspect = view.w / view.h;
-      var hRoom = Math.max(6.4, 7.0 / aspect), hRoam = Math.max(3.8, 4.2 / aspect);
+      var hRoom = Math.max(9.2, 10.0 / aspect), hRoam = Math.max(4.8, 5.3 / aspect);
       var halfH = lerp(hRoom, hRoam, e), halfW = halfH * aspect;
       var off = 0;
       camera.left = -halfW - off; camera.right = halfW - off;
