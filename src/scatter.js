@@ -21,7 +21,10 @@
       }
       return true;
     };
+    // no tall trees on the camera side of the house, so a tree never hides it (trees no longer shrink)
+    var inHouseView = function (x, z) { return x - H.x + (z - H.z) > -2 && Math.hypot(x - H.x, z - H.z) < 12; };
     var okTree = function (x, z) {
+      if (inHouseView(x, z)) return false;
       if (nearHome(x, z, 3.2) || !onLand(x, z, 1.8) || ctx.nearPath(x, z, 1.7) || distDock(x, z) < 3.5) return false;
       for (var i = 0; i < pois.length; i++) if (Math.hypot(pois[i].x - x, pois[i].z - z) < pois[i].clear) return false;
       return free(x, z, 1.5);

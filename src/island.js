@@ -56,7 +56,6 @@
         var b = mesh(g, gIco, matF(cols[1]), 0.55, 1.35, 0.3); b.scale.setScalar(0.75);
       }
       if (track) {
-        tall.push({ g: g, x: x, z: z, rad: 1.1 * s, base: s });
         circ(x, z, 0.5 * s);
       }
       return g;

@@ -152,7 +152,6 @@
       inst(new T.CircleGeometry(0.14, 5), new T.MeshBasicMaterial({ color: 0xffffff, side: T.DoubleSide }), ground, false);
       ctx.bench(x0 + 3.2, z0 + 1.8, x0, z0);
       circ(x0, z0, 1.0);
-      tall.push({ g: g, x: x0, z: z0, rad: 3.4, base: 1.3 });
     });
 
     // ---------- koi pond ----------
