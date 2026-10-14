@@ -21,7 +21,7 @@
     var view = { w: 1440, h: 900 };
     // first-person camera (the drone view keeps the orthographic one)
     var fpsCam = new T.PerspectiveCamera(68, 1.6, 0.05, 500);
-    var fovT = 68, EYE = 1.38, bob = 0;
+    var fovT = 68, EYE = 1.38, bob = 0, bobAmt = 0;
     var fog = scene.fog = new T.Fog(0xBFE3EC, 1e5, 2e5);   // effectively off until first person
     var tmpV = new T.Vector3();
     var roomTarget = new T.Vector3(H.x, 0.1, H.z);
@@ -151,10 +151,12 @@
           P.g.visible = false;
           fovT = fpsCam.fov = 68;
           fog.near = 55; fog.far = 190;
+          if (ctx.roof) { ctx.roof.g.visible = true; ctx.roof.light.intensity = ctx.roof.on; }
         } else {
           S0.pov = 'drone';
           if (P) P.g.visible = true;
           fog.near = 1e5; fog.far = 2e5;
+          if (ctx.roof) { ctx.roof.g.visible = false; ctx.roof.light.intensity = 0; }
           if (document.pointerLockElement === canvas && document.exitPointerLock) document.exitPointerLock();
         }
         rootEl.setAttribute('data-pov', S0.pov);
@@ -352,10 +354,11 @@
       var cam = camera;
       if (fps) {
         var moved = keys.u || keys.d || keys.l || keys.r;
-        bob = moved ? bob + dt * (keys.sh ? 13 : 9) : bob * Math.max(0, 1 - dt * 8);
+        bob = moved ? bob + dt * (keys.sh ? 8.5 : 6) : bob;
+        bobAmt += ((moved ? 1 : 0) - bobAmt) * Math.min(1, dt * 5);
         var cp = Math.cos(S0.pitch);
         fpsCam.fov += (fovT - fpsCam.fov) * Math.min(1, dt * 8); fpsCam.updateProjectionMatrix();
-        fpsCam.position.set(P.x, P.y + EYE + (moved ? Math.sin(bob) * 0.035 : 0), P.z);
+        fpsCam.position.set(P.x, P.y + EYE + Math.sin(bob) * 0.011 * bobAmt, P.z);
         tmpV.set(P.x - Math.sin(S0.yaw) * cp, P.y + EYE + Math.sin(S0.pitch), P.z - Math.cos(S0.yaw) * cp);
         fpsCam.lookAt(tmpV);
         if (ctx.env && ctx.env.haze) { fog.color.copy(ctx.env.haze); scene.background = scene.background || new T.Color(); scene.background.copy(ctx.env.haze); }

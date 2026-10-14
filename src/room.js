@@ -335,6 +335,63 @@
     box(E, 1.7, 0.2, 0.18, C.cream, -4.0, 3.7, 0.09);
     box(E, 1.1, 0.03, 0.9, C.coral, -4.0, 0.07, 0.6);
 
+    // ---------- roof (only shown in first person; the drone view stays a cutaway) ----------
+    safe('roof', function () {
+      var roof = new T.Group();
+      roof.visible = false;
+      root.add(roof);
+      var EAVE = 5.2, RISE = 3.4, HALF = 5.9, LEN = Math.hypot(HALF, RISE), ANG = Math.atan2(RISE, HALF);
+      var rb = function (parent, w, h, d, c, x, y, z) { var m = box(parent, w, h, d, c, x, y, z); m.castShadow = false; return m; };
+      [-1, 1].forEach(function (s) {
+        var g = new T.Group();
+        g.position.set(0, EAVE + RISE / 2, s * HALF / 2);
+        g.rotation.x = s * ANG;
+        roof.add(g);
+        rb(g, 12.6, 0.3, LEN + 0.5, '#E8896B', 0, 0.02, 0);
+        for (var i = 0; i < 13; i++) rb(g, 12.64, 0.07, 0.34, i % 2 ? '#D9775B' : '#EE9A7E', 0, 0.19, -LEN / 2 + 0.3 + i * (LEN - 0.3) / 12);
+        rb(g, 12.4, 0.06, LEN, '#D8A46C', 0, -0.17, 0);                         // wooden ceiling
+        for (var r = 0; r < 7; r++) rb(g, 0.15, 0.18, LEN, C.woodDark, -5.4 + r * 1.8, -0.26, 0);   // rafters
+      });
+      var tri = new T.Shape();
+      tri.moveTo(-5.4, 0); tri.lineTo(5.4, 0); tri.lineTo(0, RISE + 0.05); tri.closePath();
+      var gg = new T.ExtrudeGeometry(tri, { depth: 0.4, bevelEnabled: false });
+      gg.translate(0, 0, -0.2);
+      [-1, 1].forEach(function (s) {
+        var m = new T.Mesh(gg, mat(C.cream));
+        m.rotation.y = s * Math.PI / 2; m.position.set(s * 5.2, EAVE, 0);
+        m.receiveShadow = true;
+        roof.add(m);
+      });
+      rb(roof, 12.9, 0.3, 0.7, '#D9775B', 0, EAVE + RISE + 0.12, 0);              // ridge cap
+      [-3.6, -1.2, 1.2, 3.6].forEach(function (x) { rb(roof, 0.3, 0.3, 10.6, C.woodDark, x, EAVE - 0.15, 0); });   // tie beams
+      // chimney with a little smoke
+      var cx = 3.3, cz = -2.6, cy = EAVE + RISE * 0.52;
+      rb(roof, 1.1, 3.4, 1.1, '#B9B2A2', cx, cy + 1.6, cz);
+      rb(roof, 1.45, 0.22, 1.45, '#8F897B', cx, cy + 3.35, cz);
+      var puffs = [];
+      for (var k = 0; k < 5; k++) {
+        var sm = new T.Mesh(new T.SphereGeometry(0.34, 8, 8), new T.MeshBasicMaterial({ color: 0xe6e6e6, transparent: true, opacity: 0.4, depthWrite: false }));
+        roof.add(sm);
+        puffs.push({ m: sm, ph: k / 5 });
+      }
+      ctx.anim.push(function (t) {
+        puffs.forEach(function (p) {
+          var f = (t * 0.2 + p.ph) % 1;
+          p.m.position.set(cx + Math.sin(t * 0.8 + p.ph * 6) * 0.35 + f * 1.4, cy + 3.6 + f * 4.2, cz);
+          p.m.material.opacity = 0.42 * (1 - f);
+          p.m.scale.setScalar(0.7 + f * 1.8);
+        });
+      });
+      // pendant lamp
+      cyl(roof, 0.03, 0.03, 1.5, C.ink, -1, EAVE + RISE - 0.85, 0.2, 0, 0, 0, 6);
+      cyl(roof, 0.14, 0.62, 0.5, C.coral, -1, EAVE + RISE - 1.85, 0.2, 0, 0, 0, 14);
+      mesh(roof, new T.SphereGeometry(0.24, 12, 10), glow('#FFE2A0'), -1, EAVE + RISE - 2.0, 0.2, 0, 0, 0, false);
+      var lamp = new T.PointLight(0xffd9a0, 0, 14 * HM.s, 2);      // lives outside the roof group so toggling it never recompiles shaders
+      lamp.position.set(-1, EAVE + RISE - 2.4, 0.2);
+      root.add(lamp);
+      ctx.roof = { g: roof, light: lamp, on: 0.9 };
+    });
+
     // ---------- collision data (world coords) ----------
     rect(-5.4, -5.4, 5.4, -5.0);
     rect(-5.4, 5.0, 5.4, 5.4);
