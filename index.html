@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deano — Island Room Hero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#7CCBC8}
+a{color:inherit}
+.only-roam{display:none !important}
+[data-mode="roam"] .only-roam{display:flex !important}
+[data-mode="roam"] .only-room{display:none !important}
+.pill{transition:transform .2s,background .2s}
+.pill:hover{transform:translateY(-2px);background:#FFFDF6}
+.round{transition:transform .15s,box-shadow .15s}
+.round:hover{transform:translateY(-2px)}
+.round:active{transform:translateY(3px);box-shadow:0 1px 0 #0E3B38}
+#poi-label{transition:opacity .25s}
+</style>
+</head>
+<body>
+<div id="top" data-mode="room" style="position: relative; width: 100%; height: 100vh; min-height: 640px; overflow: hidden; background: #7CCBC8; color: #0E3B38; font-family: 'DM Sans', 'Helvetica Neue', sans-serif">
+
+  <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase">Loading the island…</div>
+
+  <canvas id="hero-canvas" tabindex="0" role="img" aria-label="Interactive 3D isometric model of a cozy home office on a small island in a lake. Drag sideways, or use the rotate buttons, to turn the scene. Press the Explore the island button to walk around the island." style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; outline: none"></canvas>
+
+  <!-- top bar -->
+  <header style="position: absolute; top: 0; left: 0; right: 0; z-index: 2; box-sizing: border-box; padding: 28px 40px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; pointer-events: none">
+    <a href="#top" style="pointer-events: auto; text-decoration: none; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 30px; letter-spacing: -0.01em">deano</a>
+    <nav aria-label="Main" style="pointer-events: auto; display: flex; flex-wrap: wrap; gap: 8px">
+      <a href="#work" class="pill" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #F4EFE2; border: 2px solid #0E3B38; text-decoration: none; font-weight: 600; font-size: 15px">Work</a>
+      <a href="#about" class="pill" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #F4EFE2; border: 2px solid #0E3B38; text-decoration: none; font-weight: 600; font-size: 15px">About</a>
+      <a href="#contact" class="pill" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #F4EFE2; border: 2px solid #0E3B38; text-decoration: none; font-weight: 600; font-size: 15px">Contact</a>
+    </nav>
+  </header>
+
+  <!-- room mode: headline -->
+  <div class="only-room" style="position: absolute; left: 40px; bottom: 48px; z-index: 2; box-sizing: border-box; max-width: min(560px, calc(100% - 80px)); display: flex; flex-direction: column; gap: 18px; pointer-events: none">
+    <span style="font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase">Hello! Welcome to my page</span>
+    <h1 style="margin: 0; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: clamp(52px, 7vw, 108px); line-height: 0.94; letter-spacing: -0.02em">Hi, I'm Deano.</h1>
+    <p style="margin: 0; max-width: 420px; font-size: 19px; line-height: 1.45; text-wrap: pretty">[YOUR ROLE · ONE-LINE INTRO FROM YOUR NOTION PAGE]</p>
+  </div>
+
+  <!-- roam mode: back + help -->
+  <div class="only-roam" style="position: absolute; left: 40px; bottom: 48px; z-index: 2; align-items: center; flex-wrap: wrap; gap: 16px">
+    <button type="button" class="round" id="btn-exit" style="min-height: 52px; padding: 0 24px; border-radius: 999px; border: 2px solid #0E3B38; background: #F4EFE2; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; font-family: inherit; font-weight: 600; font-size: 16px; cursor: pointer">← Back to room</button>
+    <span style="font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; max-width: 300px; line-height: 1.4; pointer-events: none">Click to walk · WASD or arrows · drag to look around</span>
+  </div>
+
+  <!-- roam mode: nearby place -->
+  <div class="only-roam" style="position: absolute; left: 0; right: 0; bottom: 120px; z-index: 2; justify-content: center; pointer-events: none">
+    <div id="poi-label" style="opacity: 0; padding: 10px 22px; border-radius: 999px; background: #F4EFE2; border: 2px solid #0E3B38; box-shadow: 0 4px 0 #0E3B38; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 20px"></div>
+  </div>
+
+  <!-- controls -->
+  <div style="position: absolute; right: 40px; bottom: 48px; z-index: 2; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 16px">
+    <span class="only-room" style="font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none">Drag to look around</span>
+    <button type="button" class="round only-room" id="btn-enter" style="align-items: center; gap: 10px; min-height: 56px; padding: 0 26px; border-radius: 999px; border: 2px solid #0E3B38; background: #E8896B; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; font-family: inherit; font-weight: 600; font-size: 17px; cursor: pointer">
+      Explore the island
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+    <button type="button" class="round" id="btn-left" aria-label="Rotate the view left" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid #0E3B38; background: #F4EFE2; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <button type="button" class="round" id="btn-right" aria-label="Rotate the view right" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid #0E3B38; background: #F4EFE2; color: #0E3B38; box-shadow: 0 4px 0 #0E3B38; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./src/core.js"></script>
+<script src="./src/room.js"></script>
+<script src="./src/island.js"></script>
+<script src="./src/pois1.js"></script>
+<script src="./src/pois2.js"></script>
+<script src="./src/scatter.js"></script>
+<script src="./src/person.js"></script>
+<script src="./src/loop.js"></script>
+<script>
+(function () {
+  var ctx = { canvas: document.getElementById('hero-canvas') };
+  ['core','room','island','pois1','pois2','scatter','person','loop'].forEach(function (n) {
+    try { window.HeroParts[n](ctx); } catch (e) { console.error('Island part "' + n + '" failed', e); }
+  });
+  var on = function (id, fn) { document.getElementById(id).addEventListener('click', fn); };
+  on('btn-left',  function () { ctx.api.rotateBy(Math.PI / 4); });
+  on('btn-right', function () { ctx.api.rotateBy(-Math.PI / 4); });
+  on('btn-enter', function () { ctx.api.enterRoam(); });
+  on('btn-exit',  function () { ctx.api.exitRoam(); });
+})();
+</script>
+</body>
+</html>
