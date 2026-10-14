@@ -80,7 +80,6 @@
       });
       anim.push(function (t, dt) { blades.rotation.z -= dt * 0.9; });
       circ(wx, wz, 3.0);
-      tall.push({ g: g, x: wx, z: wz, rad: 3.0, base: 1.5 });
     });
 
     // ---------- lighthouse ----------
@@ -114,7 +113,6 @@
       g.add(light);
       anim.push(function (t, dt) { pivot.rotation.y += dt * 1.2; light.intensity = 0.9 + Math.sin(t * 2) * 0.2; });
       circ(lx, lz, 2.7);
-      tall.push({ g: g, x: lx, z: lz, rad: 3.0, base: 1.3 });
     });
 
     // ---------- cherry tree + bench + falling petals ----------
